@@ -37,7 +37,10 @@ class Line:
         # Чтобы пересечение было, слау должна иметь решения (ранг матрицы = ранг расш. матрицы = 2)
         # print("lines got: ", self, line, sep='\n')
         if not (self.A * line.B - line.A * self.B != 0 and self.B * -line.C - line.B * -self.C != 0):
-            return None
+            if self.A == 0 and line.B == 0:
+                return Point(-line.C / line.A, -self.C / self.B)
+            if self.B == 0 and line.A == 0:
+                return Point(-self.C / self.A, -line.C / line.B)
 
         ip = Point()
 
@@ -236,6 +239,8 @@ def find_solution():
 def draw_solution(points, best_angle):
 
     field.delete("all")
+    for point in points:
+        print(point)
     limits = get_limits(points)
     points_comp = list()
     # print("\nPoints of the comp!:")
@@ -261,13 +266,13 @@ def draw_solution(points, best_angle):
 
     for i in range(4):
         field.create_text(points_comp[i].x, -20 + points_comp[i].y,
-                          text='(' + str(points[i]) + ')', justify=tk.CENTER, font="Ubuntu 8")
+                          text='(' + str(points[i]) + ')', justify=tk.CENTER, font="Ubuntu 12")
 
     field.create_text((points_comp[1].x + points_comp[2].x) / 2,
                       -20 + (points_comp[1].y + points_comp[2].y) / 2,
                       text='(' + str(Point((points[2].x + points[1].x) / 2,
                                            (points[2].y + points[1].y) / 2)) + ')',
-                                     justify=tk.CENTER, font="Ubuntu 8")
+                                     justify=tk.CENTER, font="Ubuntu 12")
 
     x1 = points[0].x + 0.15 * (points[3].x - points[0].x)
     y1 = points[0].y + 0.15 * (points[3].y - points[0].y)
@@ -280,7 +285,7 @@ def draw_solution(points, best_angle):
     p2 = translate_to_comp(p2, limits)
 
     field.create_line(p1.x, p1.y, p2.x, p2.y, width=cfg.LINE_WIDTH * 2, fill="black")
-    field.create_text((p1.x + p2.x) / 2, -20 + (p1.y + p2.y) / 2, text=f"{best_angle:g}°", justify=tk.CENTER, font="Ubuntu 8")
+    field.create_text((p1.x + p2.x) / 2, -20 + (p1.y + p2.y) / 2, text=f"{best_angle:g}°", justify=tk.CENTER, font="Ubuntu 12")
     # print(p1, p2)
 
     # Создание дуги (start - угол начала (в компьютерных координатах (по
