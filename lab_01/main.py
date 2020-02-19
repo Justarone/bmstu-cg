@@ -8,6 +8,8 @@ import tkinter.messagebox as mb
 # entry.get()
 # label['text'] = ''
 
+def show_info():
+    mb.showinfo("Информация.", cfg.INFORMATION)
 
 class Point:
     def __init__(self, x=0, y=0):
@@ -15,7 +17,10 @@ class Point:
         self.y = y
 
     def __str__(self):
-        return f"{self.x:6g}".strip() + "; " + f"{self.y:6g}".strip()
+        return f"{self.x:g}".strip() + "; " + f"{self.y:g}".strip()
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
 
 class Line:
@@ -40,11 +45,18 @@ class Line:
         else:
             line1, line2 = line, self
 
-        a = line1.B - line1.A * line2.B / line2.A
-        b = -line1.C - line1.A * -line2.C / line2.B
-        ip.x = (line2.C - b / a * line2.B) / line2.A
-        ip.y = b / a
+        if line1.A == 0:
+            ip.y = -line1.C / line1.B
+            ip.x = (-line2.C - line2.B * ip.y) / line2.A
 
+        else:
+            a = line1.B - line1.A * line2.B / line2.A
+            b = -line1.C - line1.A * -line2.C / line2.A
+            c = line2.B * line1.A / line2.A
+            ip.y = b / a
+            ip.x = ((-line2.C * line1.A) / line2.A - b * c / a) / line1.A
+
+        print("point is: ", ip)
         return ip
 
 
@@ -103,8 +115,8 @@ def create_line(p1, p2):
 # has point p1
 def find_perpendicular(p1, p2, p3):
     line = create_line(p2, p3)
-    print("line got:", line)
-    print("point is: ", p1)
+    # print("line got:", line)
+    # print("point is: ", p1)
 
     # Find coefficients for perpendicular:
     perpendicular = Line()
@@ -123,7 +135,7 @@ def find_perpendicular(p1, p2, p3):
         perpendicular.A = -(line.B / line.A)
         perpendicular.C = -perpendicular.A * p1.x - perpendicular.B * p1.y
 
-    print("perpendicular is: ", perpendicular)
+    # print("perpendicular is: ", perpendicular)
     return perpendicular
 
 
@@ -151,13 +163,17 @@ def find_angle(p1, p2, p3):
         return abs(pi / 2 - abs(atan(-mediana.A / mediana.B)))
 
     else:
-        angle = abs(abs(atan(-height.A / height.B)) - abs(atan(-mediana.A / mediana.B)))
+        angle = abs(abs(atan(-height.A / height.B) - atan(-mediana.A / mediana.B)))
         angle = pi - angle if angle > pi / 2 else angle
         return angle
 
 
 def find_solution():
-    print("Start of looking for solution.\n")
+    # print("\n\n\nFLEEEEEX\n\n\nStart of looking for solution.\n")
+    if len(points_list) < 3:
+        result_label["text"] = "Недостаточно\nточек."
+        return
+
     only_ol = True
     for i in range(2, len(points_list)):
         if not one_line_check(points_list[0], points_list[1], points_list[i]):
@@ -165,13 +181,13 @@ def find_solution():
             break
 
     if only_ol:
-        print("Can't find solution (one line points)")
+        result_label["text"] = "Все точки\nна одной\nпрямой."
+        # print("Can't find solution (one line points)")
         return
 
-    best_angle = find_angle(points_list[0], points_list[1], points_list[2])
-    best_trio = [0, 1, 2]
-    # limits = get_limits()
-    print("start of cycle")
+    best_angle = 1000
+    best_trio = [None, None, None]
+    # print("start of cycle")
 
     for i in range(len(points_list)):
         for j in range(len(points_list)):
@@ -180,53 +196,68 @@ def find_solution():
             for k in range(j + 1, len(points_list)):
                 if k == i:
                     continue
-                angle = find_angle(points_list[i], points_list[j], points_list[k])
-                if angle < best_angle:
-                    print("new best angle", angle, "and trio is", i, j, k)
-                    best_angle = angle
-                    best_trio = [i, j, k]
+                if not one_line_check(points_list[i], points_list[j], points_list[k]):
+                    angle = find_angle(points_list[i], points_list[j], points_list[k])
+                    # print(i, j, k, "wow")
+                    if angle < best_angle:
+                        # print("new best angle", angle, "and trio is", i, j, k)
+                        best_angle = angle
+                        best_trio = [i, j, k]
 
-    print("best trio is:", best_trio)
+    # print("best trio is:", best_trio)
+    if best_trio == [None, None, None]:
+        result_label["text"] = "Не удалось\nнайти тройку\nточек."
+        # print("error")
+        return
 
-    print("creating lines")
+    # print("creating lines")
     line1 = create_line(points_list[best_trio[1]], points_list[best_trio[2]])
     line2 = find_perpendicular(points_list[best_trio[0]], points_list[best_trio[1]], points_list[best_trio[2]])
 
-    print("trying to draw (look logs of draw_solution function)")
+    # print("trying to draw (look logs of draw_solution function)")
     draw_solution([points_list[best_trio[0]], points_list[best_trio[1]], points_list[best_trio[2]],
                   line1.find_intersection(line2)])
+    result_label["text"] = "Посчитано!"
 
 
 # points = [p1, p2, p3, height_intersection]
 # p1 - vertex where median and height start
 def draw_solution(points):
 
+    field.delete("all")
     limits = get_limits(points)
-    print("\nPoints of the comp!:")
+    points_comp = list()
+    # print("\nPoints of the comp!:")
     for i in range(4):
-        print(points[i], i)
-        points[i] = translate_to_comp(points[i], limits)
-        print(points[i])
-    print("END OF TRANSLATE!")
+        # print(points[i], i)
+        points_comp.append(translate_to_comp(points[i], limits))
+        # print(points[i])
+    # print("END OF TRANSLATE!")
 
     for i in range(3):
-        field.create_line(points[i].x, points[i].y, points[(i + 1) % 3].x, points[(i + 1) % 3].y,
+        field.create_line(points_comp[i].x, points_comp[i].y, points_comp[(i + 1) % 3].x, points_comp[(i + 1) % 3].y,
                           width=cfg.LINE_WIDTH, fill="green")
-    field.create_line(points[0].x, points[0].y, points[3].x, points[3].y,
+
+    for i in range(2):
+        field.create_line(points_comp[i].x, points_comp[i].y, points_comp[3].x, points_comp[3].y,
+                          width=cfg.LINE_WIDTH, fill="green")
+
+    field.create_line(points_comp[0].x, points_comp[0].y, points_comp[3].x, points_comp[3].y,
                       width=cfg.LINE_WIDTH, fill="blue")
-    field.create_line(points[0].x, points[0].y, (points[1].x + points[2].x) / 2,
-                      (points[1].y + points[2].y) / 2, width=cfg.LINE_WIDTH, fill="red")
+    field.create_line(points_comp[0].x, points_comp[0].y, (points_comp[1].x + points_comp[2].x) / 2,
+                      (points_comp[1].y + points_comp[2].y) / 2, width=cfg.LINE_WIDTH, fill="red")
+
+    for i in range(4):
+        field.create_text(points_comp[i].x, -20 + points_comp[i].y, text='(' + str(points[i]) + ')',
+                          justify=tk.CENTER, font="Ubuntu 14")
+
+    field.create_text((points_comp[1].x + points_comp[2].x) / 2, -20 + (points_comp[1].y + points_comp[2].y) / 2,
+                      text='(' + str(Point((points[2].x + points[1].x) / 2, (points[2].y + points[1].y) / 2)) + ')',
+                                     justify=tk.CENTER, font="Ubuntu 14")
+
     # Создание дуги (start - угол начала (в компьютерных координатах (по
     # часовой, 0 - справа)), extent - прирост)
     # c.create_arc(10, 10, 190, 190, start=160, extent=-70, style=ARC, outline='darkblue', width=5)
-
-
-# def translate_to_normal(point: Point, limits: tuple): WROOONG!!!!
-    # y = (1 - point.y / cfg.FIELD_HEIGHT) * \
-        # (limits[1].y - limits[1].x) + limits[1][0]
-    # x = point[0] / cfg.FIELD_WIDTH * \
-        # (limits[0][1] - limits[0][0]) + limits[0][0]
-    # return (x, y)
 
 
 def one_line_check(p1, p2, p3):
@@ -245,11 +276,11 @@ def one_line_check(p1, p2, p3):
 
 # limits = ((Xmin, Ymin), (Xmax, Ymax)).
 def translate_to_comp(point: Point, limits):
-    print("==============\n in translate_to_comp:")
-    print(point)
-    for i in range(len(limits)):
-        print(limits[i])
-    print("====================")
+    # print("==============\n in translate_to_comp:")
+    # print(point)
+    # for i in range(len(limits)):
+        # print(limits[i])
+    # print("====================")
     x = int((point.x - limits[0].x) / (limits[1].x - limits[0].x) * cfg.FIELD_WIDTH)
     y = int((1 - (point.y - limits[0].y) /
          (limits[1].y - limits[0].y)) * cfg.FIELD_HEIGHT)
@@ -300,8 +331,6 @@ def sub_point():
     sub_x_entry.delete(0, tk.END)
     sub_y_entry.delete(0, tk.END)
 
-    find_solution()
-
 
 points_list = [Point(11, 1), Point(1, 11), Point(1, 1)]
 
@@ -342,35 +371,43 @@ del_button = tk.Button(input_frame, text="Удалить", font=("Ubuntu", 17),
                        bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=remove_point,
                        activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
+solve_button = tk.Button(input_frame, text="Решить", font=("Ubuntu", 17),
+                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=find_solution,
+                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+
 add_x_entry.place(x=0, y=0, width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH / 2),
-                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5)
+                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6)
                   )
 
 add_y_entry.place(x=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH / 2), y=0,
                   width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH / 2),
-                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5)
+                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6)
                   )
 
-add_button.place(x=0, y=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5),
+add_button.place(x=0, y=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6),
                  width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH),
-                 height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5))
+                 height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6))
 
-sub_x_entry.place(x=0, y=int(2 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5),
+sub_x_entry.place(x=0, y=int(2 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6),
                   width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH / 2),
-                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5))
+                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6))
 
 sub_y_entry.place(x=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH / 2),
-                  y=int(2 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5),
+                  y=int(2 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6),
                   width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH / 2),
-                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5))
+                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6))
 
-sub_button.place(x=0, y=int(3 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5),
+sub_button.place(x=0, y=int(3 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6),
                  width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH),
-                 height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5))
+                 height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6))
 
-del_button.place(x=0, y=int(4 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5),
+del_button.place(x=0, y=int(4 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6),
                  width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH),
-                 height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 5))
+                 height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6))
+
+solve_button.place(x=0, y=int(5 * cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6),
+                   width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH),
+                   height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT / 6))
 
 input_frame.place(x=int(cfg.BORDERS_PART * cfg.WINDOW_WIDTH),
                   y=int(cfg.BORDERS_PART * cfg.WINDOW_HEIGHT),
@@ -390,19 +427,35 @@ scroll = tk.Scrollbar(
 points_listbox.config(yscrollcommand=scroll.set)
 
 data_frame.place(x=int(cfg.BORDERS_PART * cfg.WINDOW_WIDTH),
-                 y=int((cfg.BORDERS_PART * 2 + cfg.INPUT_PART_HEIGHT)
+                 y=int((cfg.BORDERS_PART * 1.5 + cfg.INPUT_PART_HEIGHT)
                        * cfg.WINDOW_HEIGHT),
                  width=int(cfg.WINDOW_WIDTH * cfg.DATA_PART_WIDTH),
                  height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
 
 points_listbox.place(x=0, y=0, width=int(0.9 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
                      height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
+
 for i in range(len(points_list)):
     points_listbox.insert(tk.END, str(points_list[i]))
 
 scroll.place(x=int(0.9 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
              y=0, width=int(0.1 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
              height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
+
+label_frame = tk.Frame(root)
+label_frame["bg"] = cfg.MAIN_COLOUR
+
+label_frame.place(x=int(cfg.BORDERS_PART * cfg.WINDOW_WIDTH),
+                 y=int((cfg.BORDERS_PART * 2 + cfg.INPUT_PART_HEIGHT + cfg.DATA_PART_HEIGHT)
+                       * cfg.WINDOW_HEIGHT),
+                 width=int(cfg.WINDOW_WIDTH * cfg.DATA_PART_WIDTH),
+                 height=int(cfg.WINDOW_HEIGHT * 0.1))
+
+result_label = tk.Label(label_frame, text="Здесь будут\nответы на ваши\nзапросы!", font=("Ubuntu", 11),
+                       fg=cfg.MAIN_COLOUR, bg=cfg.ADD_COLOUR)
+
+result_label.place(x=0, y=0, width=int(cfg.WINDOW_WIDTH * cfg.DATA_PART_WIDTH),
+                 height=int(cfg.WINDOW_HEIGHT * 0.1))
 
 
 field_frame = tk.Frame(root, bg=cfg.ADD_COLOUR)
@@ -413,5 +466,13 @@ field_frame.place(x=int((3 * cfg.BORDERS_PART + cfg.INPUT_PART_WIDTH) * cfg.WIND
                   width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
 
 field.place(x=0, y=0, width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
+
+info_button = tk.Button(root, text="i", font=("Ubuntu", 27),
+                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=show_info,
+                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+
+info_button.place(x=(cfg.BORDERS_PART * 1.5 + cfg.INPUT_PART_WIDTH) * cfg.WINDOW_WIDTH,
+                  y=cfg.BORDERS_PART * cfg.WINDOW_HEIGHT, width=cfg.BORDERS_PART * cfg.WINDOW_HEIGHT,
+                  height=cfg.WINDOW_HEIGHT * cfg.BORDERS_PART)
 
 root.mainloop()
