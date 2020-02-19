@@ -34,7 +34,7 @@ class Line:
 
     def find_intersection(self, line):
         # Чтобы пересечение было, слау должна иметь решения (ранг матрицы = ранг расш. матрицы = 2)
-        print("lines got: ", self, line, sep='\n')
+        # print("lines got: ", self, line, sep='\n')
         if not (self.A * line.B - line.A * self.B != 0 and self.B * -line.C - line.B * -self.C != 0):
             return None
 
@@ -56,7 +56,7 @@ class Line:
             ip.y = b / a
             ip.x = ((-line2.C * line1.A) / line2.A - b * c / a) / line1.A
 
-        print("point is: ", ip)
+        # print("point is: ", ip)
         return ip
 
 
@@ -143,10 +143,7 @@ def find_angle(p1, p2, p3):
     # mediana second point (first point for mediana and height is p1).
     pm = Point((p2.x + p3.x) / 2, (p2.y + p3.y) / 2)
     # Coefficients for mediana.
-    mediana = Line()
-    mediana.A = (p1.y - pm.y)
-    mediana.B = -(p1.x - pm.x)
-    mediana.C = p1.y * (p1.x - pm.x) - p1.x * (p1.y - pm.y)
+    mediana = create_line(p1, pm)
 
     # Coefficients for height perpendicular (only Bp and Ap 
     # (don't need C, cause we only need angle))
@@ -163,8 +160,9 @@ def find_angle(p1, p2, p3):
         return abs(pi / 2 - abs(atan(-mediana.A / mediana.B)))
 
     else:
+        multi = ((p2.x + p3.x) / 2 - p1.x) * (height.find_intersection(create_line(p2, p3)).x - p1.x)
         angle = abs(abs(atan(-height.A / height.B) - atan(-mediana.A / mediana.B)))
-        angle = pi - angle if angle > pi / 2 else angle
+        angle = angle if multi > 0 else pi - angle
         return angle
 
 
@@ -236,24 +234,39 @@ def draw_solution(points):
 
     for i in range(3):
         field.create_line(points_comp[i].x, points_comp[i].y, points_comp[(i + 1) % 3].x, points_comp[(i + 1) % 3].y,
-                          width=cfg.LINE_WIDTH, fill="green")
+                          width=cfg.LINE_WIDTH, fill="green", activefill="lightgreen")
 
-    for i in range(2):
-        field.create_line(points_comp[i].x, points_comp[i].y, points_comp[3].x, points_comp[3].y,
-                          width=cfg.LINE_WIDTH, fill="green")
+    field.create_line(points_comp[i].x, points_comp[i].y, points_comp[3].x, points_comp[3].y,
+                          width=cfg.LINE_WIDTH, fill="green", dash=(10,2))
 
     field.create_line(points_comp[0].x, points_comp[0].y, points_comp[3].x, points_comp[3].y,
                       width=cfg.LINE_WIDTH, fill="blue")
-    field.create_line(points_comp[0].x, points_comp[0].y, (points_comp[1].x + points_comp[2].x) / 2,
+    field.create_line(points_comp[0].x, points_comp[0].y,
+                      (points_comp[1].x + points_comp[2].x) / 2,
                       (points_comp[1].y + points_comp[2].y) / 2, width=cfg.LINE_WIDTH, fill="red")
 
     for i in range(4):
-        field.create_text(points_comp[i].x, -20 + points_comp[i].y, text='(' + str(points[i]) + ')',
-                          justify=tk.CENTER, font="Ubuntu 14")
+        field.create_text(points_comp[i].x, -20 + points_comp[i].y,
+                          text='(' + str(points[i]) + ')', justify=tk.CENTER, font="Ubuntu 8")
 
-    field.create_text((points_comp[1].x + points_comp[2].x) / 2, -20 + (points_comp[1].y + points_comp[2].y) / 2,
-                      text='(' + str(Point((points[2].x + points[1].x) / 2, (points[2].y + points[1].y) / 2)) + ')',
-                                     justify=tk.CENTER, font="Ubuntu 14")
+    field.create_text((points_comp[1].x + points_comp[2].x) / 2,
+                      -20 + (points_comp[1].y + points_comp[2].y) / 2,
+                      text='(' + str(Point((points[2].x + points[1].x) / 2,
+                                           (points[2].y + points[1].y) / 2)) + ')',
+                                     justify=tk.CENTER, font="Ubuntu 8")
+
+    x1 = points[0].x + 0.15 * (points[3].x - points[0].x)
+    y1 = points[0].y + 0.15 * (points[3].y - points[0].y)
+    x2 = points[0].x + 0.15 * ((points[1].x + points[2].x) / 2 - points[0].x)
+    y2 = points[0].y + 0.15 * ((points[1].y + points[2].y) / 2 - points[0].y)
+
+    p1 = Point(x1, y1)
+    p2 = Point(x2, y2)
+    p1 = translate_to_comp(p1, limits)
+    p2 = translate_to_comp(p2, limits)
+
+    field.create_line(p1.x, p1.y, p2.x, p2.y, width=cfg.LINE_WIDTH * 2, fill="black")
+    # print(p1, p2)
 
     # Создание дуги (start - угол начала (в компьютерных координатах (по
     # часовой, 0 - справа)), extent - прирост)
@@ -332,13 +345,14 @@ def sub_point():
     sub_y_entry.delete(0, tk.END)
 
 
-points_list = [Point(11, 1), Point(1, 11), Point(1, 1)]
+points_list = list()
 
 root = tk.Tk()
 root.title("Computer graphics 1 lab")
 root["bg"] = cfg.MAIN_COLOUR
 root.geometry(str(cfg.WINDOW_WIDTH) + "x" + str(cfg.WINDOW_HEIGHT))
 root.resizable(height=False, width=False)
+root.bind("<Return>", lambda x: add_point(add_x_entry, add_y_entry))
 
 
 input_frame = tk.Frame(root)
@@ -435,8 +449,8 @@ data_frame.place(x=int(cfg.BORDERS_PART * cfg.WINDOW_WIDTH),
 points_listbox.place(x=0, y=0, width=int(0.9 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
                      height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
 
-for i in range(len(points_list)):
-    points_listbox.insert(tk.END, str(points_list[i]))
+# for i in range(len(points_list)):
+    # points_listbox.insert(tk.END, str(points_list[i]))
 
 scroll.place(x=int(0.9 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
              y=0, width=int(0.1 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
