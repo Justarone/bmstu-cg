@@ -11,6 +11,7 @@ import tkinter.messagebox as mb
 def show_info():
     mb.showinfo("Информация.", cfg.INFORMATION)
 
+
 class Point:
     def __init__(self, x=0, y=0):
         self.x = x
@@ -91,6 +92,17 @@ def get_limits(points):
     # for i in range(2):
         # print(limits[i])
 
+    # Равномерное масштабирование
+    # if limits[0].x < limits[0].y:
+        # limits[0].y = limits[0].x
+    # else:
+        # limits[0].x = limits[0].y
+
+    # if limits[1].x > limits[1].y:
+        # limits[1].y = limits[1].x
+    # else:
+        # limits[1].x = limits[1].y
+
     for i in range(2):
         limits[i].x -= (limits[(i + 1) % 2].x - limits[i].x) * cfg.FIELD_BORDER_PART
         limits[i].y -= (limits[(i + 1) % 2].y - limits[i].y) * cfg.FIELD_BORDER_PART
@@ -145,8 +157,7 @@ def find_angle(p1, p2, p3):
     # Coefficients for mediana.
     mediana = create_line(p1, pm)
 
-    # Coefficients for height perpendicular (only Bp and Ap 
-    # (don't need C, cause we only need angle))
+    # Coefficients for height.
     height = find_perpendicular(p1, p2, p3)
 
     # Find angle.
@@ -160,8 +171,9 @@ def find_angle(p1, p2, p3):
         return abs(pi / 2 - abs(atan(-mediana.A / mediana.B)))
 
     else:
-        multi = ((p2.x + p3.x) / 2 - p1.x) * (height.find_intersection(create_line(p2, p3)).x - p1.x)
-        angle = abs(abs(atan(-height.A / height.B) - atan(-mediana.A / mediana.B)))
+        multi = ((p2.x + p3.x) / 2 - p1.x) * (height.find_intersection(create_line(p2, p3)).x -
+                                              p1.x)
+        angle = abs(atan(-height.A / height.B) - atan(-mediana.A / mediana.B))
         angle = angle if multi > 0 else pi - angle
         return angle
 
@@ -210,17 +222,18 @@ def find_solution():
 
     # print("creating lines")
     line1 = create_line(points_list[best_trio[1]], points_list[best_trio[2]])
-    line2 = find_perpendicular(points_list[best_trio[0]], points_list[best_trio[1]], points_list[best_trio[2]])
+    line2 = find_perpendicular(points_list[best_trio[0]],
+                               points_list[best_trio[1]], points_list[best_trio[2]])
 
     # print("trying to draw (look logs of draw_solution function)")
     draw_solution([points_list[best_trio[0]], points_list[best_trio[1]], points_list[best_trio[2]],
-                  line1.find_intersection(line2)])
+                  line2.find_intersection(line1)], best_angle / pi * 180)
     result_label["text"] = "Посчитано!"
 
 
 # points = [p1, p2, p3, height_intersection]
 # p1 - vertex where median and height start
-def draw_solution(points):
+def draw_solution(points, best_angle):
 
     field.delete("all")
     limits = get_limits(points)
@@ -233,8 +246,9 @@ def draw_solution(points):
     # print("END OF TRANSLATE!")
 
     for i in range(3):
-        field.create_line(points_comp[i].x, points_comp[i].y, points_comp[(i + 1) % 3].x, points_comp[(i + 1) % 3].y,
-                          width=cfg.LINE_WIDTH, fill="green", activefill="lightgreen")
+        field.create_line(points_comp[i].x, points_comp[i].y, points_comp[(i + 1) % 3].x,
+                          points_comp[(i + 1) % 3].y, width=cfg.LINE_WIDTH,
+                          fill="green", activefill="lightgreen")
 
     field.create_line(points_comp[i].x, points_comp[i].y, points_comp[3].x, points_comp[3].y,
                           width=cfg.LINE_WIDTH, fill="green", dash=(10,2))
@@ -266,6 +280,7 @@ def draw_solution(points):
     p2 = translate_to_comp(p2, limits)
 
     field.create_line(p1.x, p1.y, p2.x, p2.y, width=cfg.LINE_WIDTH * 2, fill="black")
+    field.create_text((p1.x + p2.x) / 2, -20 + (p1.y + p2.y) / 2, text=f"{best_angle:g}°", justify=tk.CENTER, font="Ubuntu 8")
     # print(p1, p2)
 
     # Создание дуги (start - угол начала (в компьютерных координатах (по
@@ -352,7 +367,7 @@ root.title("Computer graphics 1 lab")
 root["bg"] = cfg.MAIN_COLOUR
 root.geometry(str(cfg.WINDOW_WIDTH) + "x" + str(cfg.WINDOW_HEIGHT))
 root.resizable(height=False, width=False)
-root.bind("<Return>", lambda x: add_point(add_x_entry, add_y_entry))
+root.bind("<Return>", lambda x: find_solution())
 
 
 input_frame = tk.Frame(root)
