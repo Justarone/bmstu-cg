@@ -27,13 +27,8 @@ class Point:
 def find_solution():
     pass
 
-# points = [p1, p2, p3, height_intersection]
-# p1 - vertex where median and height start
 def draw_solution(points, best_angle):
     pass
-        # field.create_line(p1.x, p1.y, p2.x, p2.y, width=cfg.LINE_WIDTH * 2, fill="black")
-    # field.create_text((p1.x + p2.x) / 2, -20 + (p1.y + p2.y) / 2, text=f"{best_angle:g}°", justify=tk.CENTER, font="Ubuntu 12")
-
 
 def translate_to_comp(point: Point, limits):
     x = int((point.x - cfg.MIN_LIMIT_X) / (cfg.MAX_LIMIT_X - cfg.MIN_LIMIT_X) * cfg.FIELD_WIDTH)
