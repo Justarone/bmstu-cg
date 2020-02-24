@@ -8,6 +8,7 @@ import tkinter.messagebox as mb
 # entry.get()
 # label['text'] = ''
 
+
 def show_info():
     mb.showinfo("Информация.", cfg.INFORMATION)
 
@@ -27,13 +28,16 @@ class Point:
 def find_solution():
     pass
 
+
 def draw_solution(points, best_angle):
     pass
 
-def translate_to_comp(point: Point, limits):
-    x = int((point.x - cfg.MIN_LIMIT_X) / (cfg.MAX_LIMIT_X - cfg.MIN_LIMIT_X) * cfg.FIELD_WIDTH)
+
+def translate_to_comp(point: Point):
+    x = int((point.x - cfg.MIN_LIMIT_X) /
+            (cfg.MAX_LIMIT_X - cfg.MIN_LIMIT_X) * cfg.FIELD_WIDTH)
     y = int((1 - (point.y - cfg.MIN_LIMIT_Y) /
-         (cfg.MAX_LIMIT_Y - cfg.MIN_LIMIT_Y)) * cfg.FIELD_HEIGHT)
+             (cfg.MAX_LIMIT_Y - cfg.MIN_LIMIT_Y)) * cfg.FIELD_HEIGHT)
     return Point(x, y)
 
 
@@ -49,68 +53,33 @@ data_frame = tk.Frame(root)
 data_frame["bg"] = cfg.MAIN_COLOUR
 
 data_frame.place(x=int(cfg.BORDERS_WIDTH), y=int(cfg.BORDERS_HEIGHT),
-                  width=int(cfg.INPUT_PART_WIDTH * cfg.WINDOW_WIDTH),
-                  height=int(cfg.INPUT_PART_HEIGHT * cfg.WINDOW_HEIGHT)
-                  )
+                 width=cfg.DATA_WIDTH,
+                 height=cfg.DATA_HEIGHT
+                 )
 
+x_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Ubuntu", 15),
+                   fg=cfg.MAIN_COLOUR, justify="center")
+y_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Ubuntu", 15),
+                   fg=cfg.MAIN_COLOUR, justify="center")
+value_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Ubuntu", 15),
+                       fg=cfg.MAIN_COLOUR, justify="center")
 
-data_frame = tk.Frame(root)
-data_frame["bg"] = cfg.MAIN_COLOUR
-
-points_listbox = tk.Listbox(data_frame, selectmode=tk.EXTENDED, bg=cfg.ADD_COLOUR,
-                            fg=cfg.MAIN_COLOUR, font=("Ubuntu", 14))
-
-scroll = tk.Scrollbar(
-    data_frame, command=points_listbox.yview, bg=cfg.MAIN_COLOUR)
-points_listbox.config(yscrollcommand=scroll.set)
-
-data_frame.place(x=int(cfg.BORDERS_PART * cfg.WINDOW_WIDTH),
-                 y=int((cfg.BORDERS_PART * 1.5 + cfg.INPUT_PART_HEIGHT)
-                       * cfg.WINDOW_HEIGHT),
-                 width=int(cfg.WINDOW_WIDTH * cfg.DATA_PART_WIDTH),
-                 height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
-
-points_listbox.place(x=0, y=0, width=int(0.9 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
-                     height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
-
-# for i in range(len(points_list)):
-    # points_listbox.insert(tk.END, str(points_list[i]))
-
-scroll.place(x=int(0.9 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
-             y=0, width=int(0.1 * cfg.DATA_PART_WIDTH * cfg.WINDOW_WIDTH),
-             height=int(cfg.WINDOW_HEIGHT * cfg.DATA_PART_HEIGHT))
-
-label_frame = tk.Frame(root)
-label_frame["bg"] = cfg.MAIN_COLOUR
-
-label_frame.place(x=int(cfg.BORDERS_PART * cfg.WINDOW_WIDTH),
-                 y=int((cfg.BORDERS_PART * 2 + cfg.INPUT_PART_HEIGHT + cfg.DATA_PART_HEIGHT)
-                       * cfg.WINDOW_HEIGHT),
-                 width=int(cfg.WINDOW_WIDTH * cfg.DATA_PART_WIDTH),
-                 height=int(cfg.WINDOW_HEIGHT * 0.1))
-
-result_label = tk.Label(label_frame, text="Здесь будут\nответы на ваши\nзапросы!", font=("Ubuntu", 11),
+info_label = tk.Label(label_frame, text="x  |  y  | value", font=("Ubuntu", 11),
                        fg=cfg.MAIN_COLOUR, bg=cfg.ADD_COLOUR)
 
-result_label.place(x=0, y=0, width=int(cfg.WINDOW_WIDTH * cfg.DATA_PART_WIDTH),
-                 height=int(cfg.WINDOW_HEIGHT * 0.1))
+move_btn = tk.Button(data_frame, text="Move", font=("Ubuntu", 17),
+                     bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=move_figure,
+                     activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+rotate_btn = tk.Button(data_frame, text="Move", font=("Ubuntu", 17),
+                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=rotate_figure,
+                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+scale_btn = tk.Button(data_frame, text="Move", font=("Ubuntu", 17),
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=scale_figure,
+                      activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
-
-field_frame = tk.Frame(root, bg=cfg.ADD_COLOUR)
-field = tk.Canvas(field_frame, bg=cfg.ADD_COLOUR)
-
-field_frame.place(x=int((3 * cfg.BORDERS_PART + cfg.INPUT_PART_WIDTH) * cfg.WINDOW_WIDTH),
-                  y=int(cfg.BORDERS_PART * cfg.WINDOW_HEIGHT),
-                  width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
-
-field.place(x=0, y=0, width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
 
 info_button = tk.Button(root, text="i", font=("Ubuntu", 27),
-                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=show_info,
-                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
-
-info_button.place(x=(cfg.BORDERS_PART * 1.5 + cfg.INPUT_PART_WIDTH) * cfg.WINDOW_WIDTH,
-                  y=cfg.BORDERS_PART * cfg.WINDOW_HEIGHT, width=cfg.BORDERS_PART * cfg.WINDOW_HEIGHT,
-                  height=cfg.WINDOW_HEIGHT * cfg.BORDERS_PART)
+                        bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=show_info,
+                        activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
 root.mainloop()
