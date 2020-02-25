@@ -1,4 +1,4 @@
-from math import pi, cos, sin
+from math import pi, cos, sin, sqrt
 import tkinter as tk
 import config as cfg
 import tkinter.messagebox as mb
@@ -8,7 +8,7 @@ import tkinter.messagebox as mb
 # entry.get()
 # label['text'] = ''
 
-figure_points = list()
+figure_list = [list(), list()]
 back_list = list()
 forward_list = list()
 A, B, C, D, R = 0, 0, 0, 0, 1
@@ -28,14 +28,14 @@ def find_reversed_matrix(matrix):
     for i in range(3):
         det += matrix[0][i] * (matrix[1][(i + 1) % 3] * matrix[2][(i + 2) % 3] -
                                matrix[1][(i + 2) % 3] * matrix[2][(i + 1) % 3])
-    new_matrix = list()
+
+    new_matrix = [[0 for i in range(3)] for j in range(3)]
     for i in range(3):
-        new_matrix.append(list())
         for j in range(3):
-            new_matrix[i].append((matrix[(i + 1) % 3][(j + 1) % 3] *
+            new_matrix[j][i] = (matrix[(i + 1) % 3][(j + 1) % 3] *
                                   matrix[(i + 2) % 3][(j + 2) % 3] -
                                   matrix[(i + 2) % 3][(j + 1) % 3] *
-                                  matrix[(i + 1) % 3][(j + 2) % 3]) / det)
+                                  matrix[(i + 1) % 3][(j + 2) % 3]) / det
     return new_matrix
 
 
@@ -44,12 +44,13 @@ def show_info():
 
 
 def apply_command(matrix):
-    for i in range(len(figure_points)):
-        new_point = [0, 0, 0]
-        for j in range(3):
-            for k in range(3):
-                new_point[j] += figure_points[i][k] * matrix[j][k]
-        figure_points[i] = new_point
+    for q in range(len(figure_list)):
+        for i in range(len(figure_list[q])):
+            new_point = [0, 0, 0]
+            for j in range(3):
+                for k in range(3):
+                    new_point[j] += figure_list[q][i][k] * matrix[j][k]
+            figure_list[q][i] = new_point
 
 
 def enter_params(e_list):
@@ -78,8 +79,14 @@ def enter_params(e_list):
 def fill_points():
     t = 0
     while (t < 2 * pi):
-        figure_points.append([A + cos(t) * R, B + sin(t) * R, 1])
+        figure_list[0].append([A + cos(t) * R, B + sin(t) * R, 1])
         t += 1 / (R * cfg.SCALE)
+
+    y = -(sqrt(cfg.MAX_LIMIT_X - C) + D)
+    while (y < sqrt(cfg.MAX_LIMIT_X - C) + D):
+        figure_list[1].append([(y - D) * (y - D) + C, y, 1])
+        y += 1 / (cfg.SCALE + 0)
+
 
 
 def change_params():
@@ -150,14 +157,16 @@ def rotate_figure():
 
     else:
         move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
-        rotate_matrix = [[cos(angle), sin(angle), 0], [-sin(angle), cos(angle), 0], [0, 0, 1]]
+        rotate_matrix = [[cos(angle), -sin(angle), 0], [sin(angle), cos(angle), 0], [0, 0, 1]]
         unmove_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
 
         result_matrix = mul_matrices(move_matrix, rotate_matrix)
         result_matrix = mul_matrices(result_matrix, unmove_matrix)
 
         apply_command(result_matrix)
+        print(result_matrix)
         back_list.append(find_reversed_matrix(result_matrix))
+        print(find_reversed_matrix(result_matrix))
 
     rx_entry.delete(0, tk.END)
     ry_entry.delete(0, tk.END)
@@ -184,7 +193,7 @@ def scale_figure():
         result_matrix = mul_matrices(result_matrix, unmove_matrix)
 
         apply_command(result_matrix)
-        # back_list.append(find_reversed_matrix(result_matrix))
+        back_list.append(find_reversed_matrix(result_matrix))
 
     scx_entry.delete(0, tk.END)
     scy_entry.delete(0, tk.END)
@@ -219,11 +228,13 @@ def translate_to_comp(point_vector):
 
 def draw_figure():
     global field
-    p1 = translate_to_comp(figure_points[0])
-    for i in range(1, len(figure_points)):
-        p2 = translate_to_comp(figure_points[i])
-        field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green")
-        p1 = p2
+    field.delete("all")
+    for k in range(len(figure_list)):
+        p1 = translate_to_comp(figure_list[k][0])
+        for i in range(1, len(figure_list[k])):
+            p2 = translate_to_comp(figure_list[k][i])
+            field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green")
+            p1 = p2
 
 
 
