@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, cos, sin
 import tkinter as tk
 import config as cfg
 import tkinter.messagebox as mb
@@ -10,7 +10,17 @@ import tkinter.messagebox as mb
 
 figure_points = list()
 back_list = list()
+forward_list = list()
 A, B, C, D, R = 0, 0, 0, 0, 1
+
+
+def mul_matrices(matrix1, matrix2):
+    result_matrix = [[0 for i in range(3)] for i in range(3)]
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                result_matrix[i][j] += matrix1[i][k] * matrix2[k][j]
+    return result_matrix
 
 
 def find_reversed_matrix(matrix):
@@ -22,8 +32,10 @@ def find_reversed_matrix(matrix):
     for i in range(3):
         new_matrix.append(list())
         for j in range(3):
-            new_matrix[i].append((matrix[(i + 1) % 3][(j + 1) % 3] * matrix[(i + 2) % 3][(j + 2) % 3] -
-                                 matrix[(i + 2) % 3][(j + 1) % 3] * matrix[(i + 1) % 3][(j + 2) % 3]) / det)
+            new_matrix[i].append((matrix[(i + 1) % 3][(j + 1) % 3] *
+                                  matrix[(i + 2) % 3][(j + 2) % 3] -
+                                  matrix[(i + 2) % 3][(j + 1) % 3] *
+                                  matrix[(i + 1) % 3][(j + 2) % 3]) / det)
     return new_matrix
 
 
@@ -32,11 +44,13 @@ def show_info():
 
 
 def apply_command(matrix):
-    for i in range(figure_points):
+    for i in range(len(figure_points)):
         new_point = [0, 0, 0]
         for j in range(3):
             for k in range(3):
                 new_point[j] += figure_points[i][k] * matrix[j][k]
+        figure_points[i] = new_point
+
 
 def enter_params(e_list):
     new_params = list()
@@ -46,13 +60,14 @@ def enter_params(e_list):
     except ValueError:
         mb.showerror("Некорректные данные", "Ожидались действительные числа! (При этом R != 0)")
     else:
-        global A, B, C, D, R, back_list
+        global A, B, C, D, R, back_list, forward_list
         A = new_params[0]
         B = new_params[1]
         C = new_params[2]
         D = new_params[3]
         R = new_params[4]
         back_list = list()
+        forward_list = list()
         fill_points()
 
 
@@ -61,9 +76,10 @@ def enter_params(e_list):
 
 
 def fill_points():
-    # t = 0
-    # while (t < 2 * math.pi)
-    pass
+    t = 0
+    while (t < 2 * pi):
+        figure_points.append([A + cos(t) * R, B + sin(t) * R, 1])
+        t += 1 / (R * cfg.SCALE)
 
 
 def change_params():
@@ -76,8 +92,10 @@ def change_params():
     entrys = list()
 
     for i in "abcdr":
-        labels.append(tk.Label(top, bg=cfg.MAIN_COLOUR, font=("Consolas", 15), fg=cfg.ADD_COLOUR, text=i))
-        entrys.append(tk.Entry(top, bg=cfg.ADD_COLOUR, font=("Consolas", 15), fg=cfg.MAIN_COLOUR, justify="center"))
+        labels.append(tk.Label(top, bg=cfg.MAIN_COLOUR, font=("Consolas", 15),
+                               fg=cfg.ADD_COLOUR, text=i))
+        entrys.append(tk.Entry(top, bg=cfg.ADD_COLOUR, font=("Consolas", 15),
+                               fg=cfg.MAIN_COLOUR, justify="center"))
 
     for i in range(4):
         labels[i].grid(row=i, column=0, columnspan=1)
@@ -104,32 +122,92 @@ class Point:
 
 
 def move_figure():
-    # try:
-        # x = float(dx_entry.get())
-        # y = float(dy_entry.get())
-    # except ValueError:
-        # mb.showerror("Неверный ввод",
-                     # "Введите действительные числа в поля ввода")
-        # dx_entry.delete(0, tk.END)
-        # dy_entry.delete(0, tk.END)
-        # return
+    try:
+        x = float(dx_entry.get())
+        y = float(dy_entry.get())
+    except ValueError:
+        mb.showerror("Неверный ввод",
+                     "Введите действительные числа в поля ввода")
 
-    # dx_entry.delete(0, tk.END)
-    # dy_entry.delete(0, tk.END)
+    else:
+        move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
+        apply_command(move_matrix)
+        back_list.append(find_reversed_matrix(move_matrix))
 
-    # new_state = list()
-    # for point in state[-1]:
-        # point
-    pass
+    dx_entry.delete(0, tk.END)
+    dy_entry.delete(0, tk.END)
+    draw_figure()
+
 
 def rotate_figure():
-    pass
+    try:
+        x = (-1) * float(rx_entry.get())
+        y = (-1) * float(ry_entry.get())
+        angle = float(angle_entry.get())
+    except ValueError:
+        mb.showerror("Неверный ввод",
+                     "Введите действительные числа в поля ввода")
+
+    else:
+        move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
+        rotate_matrix = [[cos(angle), sin(angle), 0], [-sin(angle), cos(angle), 0], [0, 0, 1]]
+        unmove_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
+
+        result_matrix = mul_matrices(move_matrix, rotate_matrix)
+        result_matrix = mul_matrices(result_matrix, unmove_matrix)
+
+        apply_command(result_matrix)
+        back_list.append(find_reversed_matrix(result_matrix))
+
+    rx_entry.delete(0, tk.END)
+    ry_entry.delete(0, tk.END)
+    angle_entry.delete(0, tk.END)
+    draw_figure()
+
 
 def scale_figure():
-    pass
+    try:
+        x = (-1) * float(scx_entry.get())
+        y = (-1) * float(scy_entry.get())
+        kx = float(sx_entry.get())
+        ky = float(sy_entry.get())
+    except ValueError:
+        mb.showerror("Неверный ввод",
+                     "Введите действительные числа в поля ввода")
+
+    else:
+        move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
+        scale_matrix = [[kx, 0, 0], [0, ky, 0], [0, 0, 1]]
+        unmove_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
+
+        result_matrix = mul_matrices(move_matrix, scale_matrix)
+        result_matrix = mul_matrices(result_matrix, unmove_matrix)
+
+        apply_command(result_matrix)
+        # back_list.append(find_reversed_matrix(result_matrix))
+
+    scx_entry.delete(0, tk.END)
+    scy_entry.delete(0, tk.END)
+    sx_entry.delete(0, tk.END)
+    sy_entry.delete(0, tk.END)
+    draw_figure()
+
 
 def back_figure():
-    pass
+    if back_list:
+        matrix = back_list.pop()
+        apply_command(matrix)
+        forward_list.append(find_reversed_matrix(matrix))
+        draw_figure()
+
+
+def forward_figure():
+    if forward_list:
+        matrix = forward_list.pop()
+        apply_command(matrix)
+        back_list.append(find_reversed_matrix(matrix))
+        draw_figure()
+
 
 def translate_to_comp(point_vector):
     x = int((point_vector[0] - cfg.MIN_LIMIT_X) /
@@ -137,6 +215,16 @@ def translate_to_comp(point_vector):
     y = int((1 - (point_vector[1] - cfg.MIN_LIMIT_Y) /
              (cfg.MAX_LIMIT_Y - cfg.MIN_LIMIT_Y)) * cfg.FIELD_HEIGHT)
     return Point(x, y)
+
+
+def draw_figure():
+    global field
+    p1 = translate_to_comp(figure_points[0])
+    for i in range(1, len(figure_points)):
+        p2 = translate_to_comp(figure_points[i])
+        field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green")
+        p1 = p2
+
 
 
 root = tk.Tk()
@@ -191,45 +279,64 @@ scale_btn = tk.Button(data_frame, text="Масштабировать", font=("Co
                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
 back_btn = tk.Button(data_frame, text="<--", font=("Consolas", 24),
-                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=scale_figure,
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=back_figure,
+                      activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+
+forward_btn = tk.Button(data_frame, text="-->", font=("Consolas", 24),
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=forward_figure,
                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
 
-move_label = tk.Label(data_frame, text="ПЕРЕМЕЩЕНИЕ.\n(Ввод dx, dy,\nгде dx, dy - перемещение\nпо х и по у соответственно)",
-                      font=("Consolas", 9), bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
+move_label = tk.Label(data_frame, text="ПЕРЕМЕЩЕНИЕ.\n(Ввод dx, dy," \
+                      "\nгде dx, dy - перемещение\nпо х и по у соответственно)",
+                      font=("Consolas", 9), bg=cfg.MAIN_COLOUR,
+                      fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
-rotate_label = tk.Label(data_frame, text="ПОВОРОТ.\n(Ввод x, y, angle,\nгде x, y - координаты \nцентра поворота,"\
-                      " angle - \nугол поворота в радианах)", font=("Consolas", 9), bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR,
-                        relief=tk.GROOVE)
+rotate_label = tk.Label(data_frame, text="ПОВОРОТ.\n(Ввод x, y, angle," \
+                        "\nгде x, y - координаты \nцентра поворота,"\
+                      " angle - \nугол поворота в радианах)", font=("Consolas", 9),
+                        bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
-scale_label = tk.Label(data_frame, text="МАСШТАБИРОВАНИЕ.\n(Ввод kx, ky, Mx, My,\nгде М - центр масштабирования,\n" \
-                      "kx, ky - коэффициенты \nмасштабирования)", font=("Consolas", 9), bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR,
-                       relief=tk.GROOVE)
+scale_label = tk.Label(data_frame, text="МАСШТАБИРОВАНИЕ.\n(Ввод kx, ky, Mx, My," \
+                       "\nгде М - центр масштабирования,\n" \
+                      "kx, ky - коэффициенты \nмасштабирования)", font=("Consolas", 9),
+                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
-move_label.place(x=0, y=0, width=cfg.DATA_WIDTH, height = 2 * cfg.DATA_HEIGHT // cfg.COLUMNS)
-dx_entry.place(x=0, y=2 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 2, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
-dy_entry.place(x=cfg.DATA_WIDTH // 2, y=2 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 2,
-               height = cfg.DATA_HEIGHT // cfg.COLUMNS)
-move_btn.place(x=0, y=3 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+move_label.place(x=0, y=0, width=cfg.DATA_WIDTH, height=2 * cfg.DATA_HEIGHT // cfg.COLUMNS)
+dx_entry.place(x=0, y=2 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 2,
+               height=cfg.DATA_HEIGHT // cfg.COLUMNS)
+dy_entry.place(x=cfg.DATA_WIDTH // 2, y=2 * cfg.DATA_HEIGHT // cfg.COLUMNS,
+               width=cfg.DATA_WIDTH // 2, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
+move_btn.place(x=0, y=3 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH,
+               height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 
-rotate_label.place(x=0, y=4 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH, height = 2 * cfg.DATA_HEIGHT // cfg.COLUMNS)
-rx_entry.place(x=0, y=6 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 3, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+rotate_label.place(x=0, y=4 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH,
+                   height=2 * cfg.DATA_HEIGHT // cfg.COLUMNS)
+rx_entry.place(x=0, y=6 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 3,
+               height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 ry_entry.place(x=cfg.DATA_WIDTH // 3, y=6 * cfg.DATA_HEIGHT // cfg.COLUMNS,
-              width=cfg.DATA_WIDTH // 3, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+              width=cfg.DATA_WIDTH // 3, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 angle_entry.place(x=2 * cfg.DATA_WIDTH // 3, y=6 * cfg.DATA_HEIGHT // cfg.COLUMNS,
-                 width=cfg.DATA_WIDTH // 3, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
-rotate_btn.place(x=0, y=7 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+                 width=cfg.DATA_WIDTH // 3, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
+rotate_btn.place(x=0, y=7 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH,
+                 height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 
-scale_label.place(x=0, y=8 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH, height = 2 * cfg.DATA_HEIGHT // cfg.COLUMNS)
-sx_entry.place(x=0, y=10 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 4, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+scale_label.place(x=0, y=8 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH,
+                  height=2 * cfg.DATA_HEIGHT // cfg.COLUMNS)
+sx_entry.place(x=0, y=10 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 4,
+               height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 sy_entry.place(x=cfg.DATA_WIDTH // 4, y=10 * cfg.DATA_HEIGHT // cfg.COLUMNS,
-               width=cfg.DATA_WIDTH // 4, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+               width=cfg.DATA_WIDTH // 4, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 scx_entry.place(x=2 * cfg.DATA_WIDTH // 4, y=10 * cfg.DATA_HEIGHT // cfg.COLUMNS,
-               width=cfg.DATA_WIDTH // 4, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+               width=cfg.DATA_WIDTH // 4, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 scy_entry.place(x=3 * cfg.DATA_WIDTH // 4, y=10 * cfg.DATA_HEIGHT // cfg.COLUMNS,
-               width=cfg.DATA_WIDTH // 4, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
-scale_btn.place(x=0, y=11 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
-back_btn.place(x=0, y=12 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH, height = cfg.DATA_HEIGHT // cfg.COLUMNS)
+               width=cfg.DATA_WIDTH // 4, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
+scale_btn.place(x=0, y=11 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH,
+                height=cfg.DATA_HEIGHT // cfg.COLUMNS)
+back_btn.place(x=0, y=12 * cfg.DATA_HEIGHT // cfg.COLUMNS, width=cfg.DATA_WIDTH // 2,
+               height=cfg.DATA_HEIGHT // cfg.COLUMNS)
+forward_btn.place(x=cfg.DATA_WIDTH // 2, y=12 * cfg.DATA_HEIGHT // cfg.COLUMNS,
+                  width=cfg.DATA_WIDTH // 2, height=cfg.DATA_HEIGHT // cfg.COLUMNS)
 
 
 field_frame = tk.Frame(root, bg=cfg.ADD_COLOUR)
@@ -256,10 +363,16 @@ params_btn = tk.Button(info_frame, text="Параметры", font=("Consolas", 
 
 res_label = tk.Label(info_frame, text="", font=("Consolas", 12), fg=cfg.MAIN_COLOUR, bg=cfg.ADD_COLOUR)
 
-res_label.place(x=0, y=0, width=cfg.INFO_WIDTH, height=cfg.INFO_HEIGHT * (cfg.INFO_COLS - 1) // cfg.INFO_COLS)
+res_label.place(x=0, y=0, width=cfg.INFO_WIDTH,
+                height=cfg.INFO_HEIGHT * (cfg.INFO_COLS - 1) // cfg.INFO_COLS)
 params_btn.place(x=0, y=cfg.INFO_HEIGHT * (cfg.INFO_COLS - 1) // cfg.INFO_COLS,
                   width=4 / 5 * cfg.INFO_WIDTH, height=cfg.INFO_HEIGHT // cfg.INFO_COLS)
-info_button.place(x=4 / 5 * cfg.INFO_WIDTH, y=cfg.INFO_HEIGHT * (cfg.INFO_COLS - 1) // cfg.INFO_COLS,
+info_button.place(x=4 / 5 * cfg.INFO_WIDTH,
+                  y=cfg.INFO_HEIGHT * (cfg.INFO_COLS - 1) // cfg.INFO_COLS,
                   width=1 / 5 * cfg.INFO_WIDTH, height=cfg.INFO_HEIGHT // cfg.INFO_COLS)
+
+fill_points()
+draw_figure()
+
 
 root.mainloop()
