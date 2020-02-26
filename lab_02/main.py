@@ -58,6 +58,8 @@ def enter_params(e_list):
     try:
         for e in e_list:
             new_params.append(float(e.get()))
+        if new_params[-1] == 0:
+            raise ValueError
     except ValueError:
         mb.showerror("Некорректные данные", "Ожидались действительные числа! (При этом R != 0)")
     else:
@@ -80,7 +82,7 @@ def fill_points():
     for i in range(len(figure_list)):
         figure_list[i] = list()
     t = 0
-    while (t < 2 * pi):
+    while (t <= 2 * pi):
         figure_list[0].append([A + cos(t) * R, B + sin(t) * R, 1])
         t += 1 / (R * cfg.SCALE)
 
@@ -233,7 +235,8 @@ def find_zone_points():
     zone_points = list()
     for plist in figure_list:
         zone_points.extend(
-            list(filter(lambda x: x[0] ** 2 + x[1] ** 2 <= R * R and x[0] >= x[1] ** 2, plist)))
+            list(filter(lambda x: (x[0] - A) ** 2 + (x[1] - B) ** 2 <= R * R \
+                        and x[0] >= C + (x[1] - D) ** 2, plist)))
     return zone_points
 
 
@@ -244,64 +247,67 @@ def draw_lines():
 
     for pts in zone_points:
         b = pts[1] - pts[0]
-        rb = pts[1] + pts[0]
 
         if not min_b or b < min_b:
+            min_pts = pts
             min_b = b
+
         if not max_b or b > max_b:
             max_b = b
+            max_pts = pts
+
+    c = (max_pts[1] - max_pts[0]) / (min_pts[1] - min_pts[0])
+    for pts in zone_points:
+        rb = pts[1] - c * pts[0]
 
         if not minr_b or rb < minr_b:
             minr_b = rb
         if not maxr_b or rb > maxr_b:
             maxr_b = rb
 
-    avgr_b = (minr_b + maxr_b) / 2
+    avgr_b = (maxr_b + minr_b) / 2
+    p1 = translate_to_comp([-1000, c * -1000 + avgr_b, 1])
+    p2 = translate_to_comp([1000, c * 1000 + avgr_b, 1])
+    field.create_line(p1.x, p1.y, p2.x, p2.y, fill="blue")
 
-    zone1, zone2 = list(), list()
+    z1, z2 = list(), list()
     for pts in zone_points:
-        rb = pts[0] + pts[1]
-        if rb < avgr_b:
-            zone1.append(pts)
+        if pts[1] - c * pts[0] < avgr_b:
+            z1.append(pts)
         else:
-            zone2.append(pts)
+            z2.append(pts)
 
-    zone1.sort(key=lambda x: x[1] - x[0])
-    zone2.sort(key=lambda x: x[1] - x[0])
-    # print("zones")
-    # for i in range(len(zone1)):
-        # print(zone1[i][1] - zone1[i][0])
-    # for i in range(len(zone2)):
-        # print(zone2[i][1] - zone2[i][0])
+    z1.sort(key=lambda x: x[1] - x[0])
+    z2.sort(key=lambda x: x[1] - x[0])
 
-    cur_b = min_b + step
+    cur_b = min_b
+
     while cur_b < max_b:
-        # print("one more line")
-        draw_line(cur_b, zone1, zone2, step)
+        draw_line(cur_b, z1, z2)
         cur_b += step
 
 
-def draw_line(b, z1, z2, step):
+def draw_line(b, z1, z2):
     global field
+    points = list()
+
     i = 0
     while i < len(z1) and z1[i][1] - z1[i][0] < b:
         i += 1
-    p1 = z1[i - 1]
+    points.append(translate_to_comp(z1[i - 1]))
 
     i = 0
     while i < len(z2) and z2[i][1] - z2[i][0] < b:
         i += 1
-    p2 = z2[i - 1]
+    points.append(translate_to_comp(z2[i - 1]))
 
-    # if abs(p2[1] - p2[0] - b) < step / 2 and (p1[1] - p2[1] - b) < step / 2:
-    pair = [translate_to_comp(p1), translate_to_comp(p2)]
-    # print(pair[0], pair[1])
-    field.create_line(pair[0].x, pair[0].y, pair[1].x, pair[1].y, fill="blue")
+    field.create_line(points[0].x, points[0].y, points[1].x, points[1].y, fill="red")
 
 
 def draw_figure():
     global field
     field.delete("all")
+    # field.create_line()
     for k in range(len(figure_list) - 1):
         p1 = translate_to_comp(figure_list[k][0])
         for i in range(1, len(figure_list[k])):
