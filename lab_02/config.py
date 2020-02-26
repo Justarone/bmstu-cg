@@ -27,7 +27,7 @@ INFORMATION = '''
 Here should be info...
 '''
 
-SCALE = 100
+SCALE = 10
 MAX_LIMIT_X = (FIELD_WIDTH / SCALE) // 2
 MAX_LIMIT_Y = (FIELD_HEIGHT / SCALE) // 2
 MIN_LIMIT_X = -MAX_LIMIT_X

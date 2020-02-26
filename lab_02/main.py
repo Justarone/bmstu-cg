@@ -8,7 +8,7 @@ import tkinter.messagebox as mb
 # entry.get()
 # label['text'] = ''
 
-figure_list = [list(), list()]
+figure_list = [list(), list(), list()]
 back_list = list()
 forward_list = list()
 A, B, C, D, R = 0, 0, 0, 0, 1
@@ -77,6 +77,8 @@ def enter_params(e_list):
 
 
 def fill_points():
+    for i in range(len(figure_list)):
+        figure_list[i] = list()
     t = 0
     while (t < 2 * pi):
         figure_list[0].append([A + cos(t) * R, B + sin(t) * R, 1])
@@ -86,6 +88,9 @@ def fill_points():
     while (y < sqrt(cfg.MAX_LIMIT_X - C) + D):
         figure_list[1].append([(y - D) * (y - D) + C, y, 1])
         y += 1 / (cfg.SCALE + 0)
+
+    figure_list[2] = find_zone_points()
+    draw_figure()
 
 
 
@@ -104,14 +109,14 @@ def change_params():
         entrys.append(tk.Entry(top, bg=cfg.ADD_COLOUR, font=("Consolas", 15),
                                fg=cfg.MAIN_COLOUR, justify="center"))
 
-    for i in range(4):
+    for i in range(5):
         labels[i].grid(row=i, column=0, columnspan=1)
         entrys[i].grid(row=i, column=1, padx=10, columnspan=1)
 
     ok_btn = tk.Button(top, text="Ok", font=("Consolas", 14),
                        bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=lambda: enter_params(entrys),
                      activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
-    ok_btn.grid(row=4, column=0)
+    ok_btn.grid(row=5, column=0)
 
     top.mainloop()
 
@@ -164,9 +169,7 @@ def rotate_figure():
         result_matrix = mul_matrices(result_matrix, unmove_matrix)
 
         apply_command(result_matrix)
-        print(result_matrix)
         back_list.append(find_reversed_matrix(result_matrix))
-        print(find_reversed_matrix(result_matrix))
 
     rx_entry.delete(0, tk.END)
     ry_entry.delete(0, tk.END)
@@ -226,16 +229,86 @@ def translate_to_comp(point_vector):
     return Point(x, y)
 
 
+def find_zone_points():
+    zone_points = list()
+    for plist in figure_list:
+        zone_points.extend(
+            list(filter(lambda x: x[0] ** 2 + x[1] ** 2 <= R * R and x[0] >= x[1] ** 2, plist)))
+    return zone_points
+
+
+def draw_lines():
+    step = 1
+    zone_points = figure_list[2]
+    min_b, max_b, minr_b, maxr_b = None, None, None, None
+
+    for pts in zone_points:
+        b = pts[1] - pts[0]
+        rb = pts[1] + pts[0]
+
+        if not min_b or b < min_b:
+            min_b = b
+        if not max_b or b > max_b:
+            max_b = b
+
+        if not minr_b or rb < minr_b:
+            minr_b = rb
+        if not maxr_b or rb > maxr_b:
+            maxr_b = rb
+
+    avgr_b = (minr_b + maxr_b) / 2
+
+    zone1, zone2 = list(), list()
+    for pts in zone_points:
+        rb = pts[0] + pts[1]
+        if rb < avgr_b:
+            zone1.append(pts)
+        else:
+            zone2.append(pts)
+
+    zone1.sort(key=lambda x: x[1] - x[0])
+    zone2.sort(key=lambda x: x[1] - x[0])
+    # print("zones")
+    # for i in range(len(zone1)):
+        # print(zone1[i][1] - zone1[i][0])
+    # for i in range(len(zone2)):
+        # print(zone2[i][1] - zone2[i][0])
+
+    cur_b = min_b + step
+    while cur_b < max_b:
+        # print("one more line")
+        draw_line(cur_b, zone1, zone2, step)
+        cur_b += step
+
+
+def draw_line(b, z1, z2, step):
+    global field
+    i = 0
+    while i < len(z1) and z1[i][1] - z1[i][0] < b:
+        i += 1
+    p1 = z1[i - 1]
+
+    i = 0
+    while i < len(z2) and z2[i][1] - z2[i][0] < b:
+        i += 1
+    p2 = z2[i - 1]
+
+    # if abs(p2[1] - p2[0] - b) < step / 2 and (p1[1] - p2[1] - b) < step / 2:
+    pair = [translate_to_comp(p1), translate_to_comp(p2)]
+    # print(pair[0], pair[1])
+    field.create_line(pair[0].x, pair[0].y, pair[1].x, pair[1].y, fill="blue")
+
+
 def draw_figure():
     global field
     field.delete("all")
-    for k in range(len(figure_list)):
+    for k in range(len(figure_list) - 1):
         p1 = translate_to_comp(figure_list[k][0])
         for i in range(1, len(figure_list[k])):
             p2 = translate_to_comp(figure_list[k][i])
             field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green")
             p1 = p2
-
+    draw_lines()
 
 
 root = tk.Tk()
@@ -383,7 +456,6 @@ info_button.place(x=4 / 5 * cfg.INFO_WIDTH,
                   width=1 / 5 * cfg.INFO_WIDTH, height=cfg.INFO_HEIGHT // cfg.INFO_COLS)
 
 fill_points()
-draw_figure()
 
 
 root.mainloop()
