@@ -72,6 +72,7 @@ def enter_params(e_list):
         back_list = list()
         forward_list = list()
         fill_points()
+        res_label["text"] = "Новая фигура!\nВсе состояния для\nстарой фигуры сброшены!"
 
 
     for e in e_list:
@@ -89,10 +90,24 @@ def fill_points():
     y = -(sqrt(cfg.MAX_LIMIT_X - C) + D)
     while (y < sqrt(cfg.MAX_LIMIT_X - C) + D):
         figure_list[1].append([(y - D) * (y - D) + C, y, 1])
-        y += 1 / (cfg.SCALE + 0)
+        y += 1 / (cfg.SCALE * 10)
 
     figure_list[2] = find_zone_points()
+    res_label["text"] = f"a = {A:.2f}, b = {B:.2f},\nc = {C:.2f}, d = {D:.2f},\nr = {R:.2f}."
+    res_label["text"] += "\nЦентр: (0, 0)."
     draw_figure()
+
+    # Отрисовка примерного отрезка
+    p1 = translate_to_comp([cfg.MIN_LIMIT_X + cfg.MAX_LIMIT_X / 6,
+                            cfg.MAX_LIMIT_Y / 6 * 4, 1])
+    p2 = translate_to_comp([cfg.MIN_LIMIT_X + cfg.MAX_LIMIT_X / 6,
+                            cfg.MAX_LIMIT_Y / 6 * 5, 1])
+    field.create_line(p1.x, p1.y, p2.x, p2.y, fill="black", arrow=tk.BOTH, width=cfg.LINE_WIDTH)
+
+    p = translate_to_comp([cfg.MIN_LIMIT_X + cfg.MAX_LIMIT_X / 4,
+                            cfg.MAX_LIMIT_Y / 6 * 4.5, 1])
+    field.create_text(p.x, p.y, text=f"{cfg.MAX_LIMIT_Y / 6:.2f}",
+                      justify=tk.CENTER, font="Ubuntu 12")
 
 
 
@@ -142,11 +157,13 @@ def move_figure():
     except ValueError:
         mb.showerror("Неверный ввод",
                      "Введите действительные числа в поля ввода")
+        res_label["text"] = ""
 
     else:
         move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
         apply_command(move_matrix)
         back_list.append(find_reversed_matrix(move_matrix))
+        res_label["text"] = "Фигура\nперемещена!"
 
     dx_entry.delete(0, tk.END)
     dy_entry.delete(0, tk.END)
@@ -161,6 +178,7 @@ def rotate_figure():
     except ValueError:
         mb.showerror("Неверный ввод",
                      "Введите действительные числа в поля ввода")
+        res_label["text"] = ""
 
     else:
         move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
@@ -172,6 +190,7 @@ def rotate_figure():
 
         apply_command(result_matrix)
         back_list.append(find_reversed_matrix(result_matrix))
+        res_label["text"] = "Фигура\nповернута!"
 
     rx_entry.delete(0, tk.END)
     ry_entry.delete(0, tk.END)
@@ -185,20 +204,28 @@ def scale_figure():
         y = (-1) * float(scy_entry.get())
         kx = float(sx_entry.get())
         ky = float(sy_entry.get())
+        if not kx or not ky:
+            raise ZeroDivisionError
     except ValueError:
         mb.showerror("Неверный ввод",
                      "Введите действительные числа в поля ввода")
+        res_label["text"] = ""
+    except ZeroDivisionError:
+        mb.showerror("Плохие данные.", "При данных значениях масштабирования фигура " \
+                     "превратится либо в точку, либо в прямую. Не допускаю!")
+        res_label["text"] = ""
 
     else:
-        move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
+        move_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
         scale_matrix = [[kx, 0, 0], [0, ky, 0], [0, 0, 1]]
-        unmove_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
+        unmove_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
 
         result_matrix = mul_matrices(move_matrix, scale_matrix)
         result_matrix = mul_matrices(result_matrix, unmove_matrix)
 
         apply_command(result_matrix)
         back_list.append(find_reversed_matrix(result_matrix))
+        res_label["text"] = "Фигура\nотмасштабирована!"
 
     scx_entry.delete(0, tk.END)
     scy_entry.delete(0, tk.END)
@@ -213,6 +240,9 @@ def back_figure():
         apply_command(matrix)
         forward_list.append(find_reversed_matrix(matrix))
         draw_figure()
+        res_label["text"] = "Предыдущее\nсостояние."
+    else:
+        res_label["text"] = "Вы в самом\nстаром состоянии."
 
 
 def forward_figure():
@@ -221,6 +251,9 @@ def forward_figure():
         apply_command(matrix)
         back_list.append(find_reversed_matrix(matrix))
         draw_figure()
+        res_label["text"] = "Следующее\nсостояние."
+    else:
+        res_label["text"] = "Вы в самом\nновом состоянии."
 
 
 def translate_to_comp(point_vector):
@@ -241,12 +274,12 @@ def find_zone_points():
 
 
 def draw_lines():
-    step = 1
+    step = cfg.STEP
     zone_points = figure_list[2]
-    min_b, max_b, minr_b, maxr_b = None, None, None, None
+    min_b, max_b = None, None
 
     for pts in zone_points:
-        b = pts[1] - pts[0]
+        b = pts[1] - cfg.INCLINE * pts[0]
 
         if not min_b or b < min_b:
             min_pts = pts
@@ -256,63 +289,76 @@ def draw_lines():
             max_b = b
             max_pts = pts
 
-    c = (max_pts[1] - max_pts[0]) / (min_pts[1] - min_pts[0])
-    for pts in zone_points:
-        rb = pts[1] - c * pts[0]
+    c = (max_pts[1] - min_pts[1]) / (max_pts[0] - min_pts[0])
 
-        if not minr_b or rb < minr_b:
-            minr_b = rb
-        if not maxr_b or rb > maxr_b:
-            maxr_b = rb
-
-    avgr_b = (maxr_b + minr_b) / 2
-    p1 = translate_to_comp([-1000, c * -1000 + avgr_b, 1])
-    p2 = translate_to_comp([1000, c * 1000 + avgr_b, 1])
-    field.create_line(p1.x, p1.y, p2.x, p2.y, fill="blue")
+    half_b = max_pts[1] - c * max_pts[0]
+    # p1 = translate_to_comp([-1000, c * -1000 + half_b, 1])
+    # p2 = translate_to_comp([1000, c * 1000 + half_b, 1])
+    # field.create_line(p1.x, p1.y, p2.x, p2.y, fill="blue")
 
     z1, z2 = list(), list()
     for pts in zone_points:
-        if pts[1] - c * pts[0] < avgr_b:
+        if pts[1] - c * pts[0] < half_b:
             z1.append(pts)
         else:
             z2.append(pts)
 
-    z1.sort(key=lambda x: x[1] - x[0])
-    z2.sort(key=lambda x: x[1] - x[0])
+    z1.sort(key=lambda x: x[1] - cfg.INCLINE * x[0])
+    z2.sort(key=lambda x: x[1] - cfg.INCLINE * x[0])
 
     cur_b = min_b
 
     while cur_b < max_b:
-        draw_line(cur_b, z1, z2)
+        draw_line(cur_b, z1, z2, cfg.INCLINE)
         cur_b += step
 
 
-def draw_line(b, z1, z2):
+def draw_line(b, z1, z2, incline):
     global field
     points = list()
 
     i = 0
-    while i < len(z1) and z1[i][1] - z1[i][0] < b:
+    while i < len(z1) - 1 and z1[i][1] - incline * z1[i][0] < b:
         i += 1
-    points.append(translate_to_comp(z1[i - 1]))
+    points.append(translate_to_comp(z1[i]))
 
     i = 0
-    while i < len(z2) and z2[i][1] - z2[i][0] < b:
+    while i < len(z2) - 1 and z2[i][1] - incline * z2[i][0] < b:
         i += 1
-    points.append(translate_to_comp(z2[i - 1]))
+    points.append(translate_to_comp(z2[i]))
 
-    field.create_line(points[0].x, points[0].y, points[1].x, points[1].y, fill="red")
+    field.create_line(points[0].x, points[0].y, points[1].x, points[1].y, width=cfg.LINE_WIDTH,
+                      fill="red")
 
 
 def draw_figure():
     global field
     field.delete("all")
-    # field.create_line()
+
+    # draw center
+    center = translate_to_comp([0, 0, 1])
+
+    # draw axises
+    p1 = translate_to_comp([cfg.MIN_LIMIT_X, 0, 1])
+    p2 = translate_to_comp([cfg.MAX_LIMIT_X, 0, 1])
+    field.create_line(p1.x, p1.y, p2.x, p2.y, fill="black", arrow=tk.LAST, width=cfg.LINE_WIDTH)
+    p1 = translate_to_comp([0, cfg.MIN_LIMIT_Y, 1])
+    p2 = translate_to_comp([0, cfg.MAX_LIMIT_Y, 1])
+    field.create_line(p1.x, p1.y, p2.x, p2.y, fill="black", arrow=tk.LAST, width=cfg.LINE_WIDTH)
+
+    field.create_oval(center.x, center.y, center.x, center.y,
+                      width = cfg.POINT_SIZE, fill = "black")
     for k in range(len(figure_list) - 1):
         p1 = translate_to_comp(figure_list[k][0])
+
+        # "Дорисовка" окружности
+        if k == 0:
+            p2 = translate_to_comp(figure_list[k][-1])
+            field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green", width=cfg.LINE_WIDTH)
+
         for i in range(1, len(figure_list[k])):
             p2 = translate_to_comp(figure_list[k][i])
-            field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green")
+            field.create_line(p1.x, p1.y, p2.x, p2.y, fill="green", width=cfg.LINE_WIDTH)
             p1 = p2
     draw_lines()
 

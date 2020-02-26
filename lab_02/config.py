@@ -14,20 +14,28 @@ DATA_PART_HEIGHT = 0.8 - 2 * BORDERS_PART
 DATA_WIDTH = int(DATA_PART_WIDTH * WINDOW_WIDTH)
 DATA_HEIGHT = int(DATA_PART_HEIGHT * WINDOW_HEIGHT)
 
-FIELD_PART_WIDTH = 0.72 - 2 * BORDERS_PART
+FIELD_PART_WIDTH = (1 - DATA_PART_WIDTH) - 4 * BORDERS_PART
 FIELD_PART_HEIGHT = 1 - 2 * BORDERS_PART
 FIELD_WIDTH = int(FIELD_PART_WIDTH * WINDOW_WIDTH)
 FIELD_HEIGHT = int(FIELD_PART_HEIGHT * WINDOW_HEIGHT)
 
-POINT_SIZE = 2
+POINT_SIZE = 6
+LINE_WIDTH = 2
 
 FIELD_BORDER_PART = 0.03
 
-INFORMATION = '''
-Here should be info...
+INFORMATION = '''\
+Данная программа предоставляет следующие возможности работы с фигурой, образованной окружностью и \
+параболой: перемещение, вращение, масштабирование, изменение параметров фигур, а также возврат на \
+неограниченное кол-во состояний вперед и назад.\n\n\
+Уравнения прямых:
+(x - a) ^ 2 + (y - b) ^ 2 = r ^ 2
+x = c + (y - d) ^ 2
 '''
 
-SCALE = 10
+SCALE = 100
+STEP = 1 * 10 / SCALE
+INCLINE = 1
 MAX_LIMIT_X = (FIELD_WIDTH / SCALE) // 2
 MAX_LIMIT_Y = (FIELD_HEIGHT / SCALE) // 2
 MIN_LIMIT_X = -MAX_LIMIT_X
@@ -42,3 +50,5 @@ INFO_PART_WIDTH = DATA_PART_WIDTH
 INFO_WIDTH = int(INFO_PART_WIDTH * WINDOW_WIDTH)
 INFO_HEIGHT = int(INFO_PART_HEIGHT * WINDOW_HEIGHT)
 INFO_COLS = 4
+
+
