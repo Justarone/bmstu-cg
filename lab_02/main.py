@@ -181,9 +181,9 @@ def rotate_figure():
         res_label["text"] = ""
 
     else:
-        move_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
+        move_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
         rotate_matrix = [[cos(angle), -sin(angle), 0], [sin(angle), cos(angle), 0], [0, 0, 1]]
-        unmove_matrix = [[1, 0, -x], [0, 1, -y], [0, 0, 1]]
+        unmove_matrix = [[1, 0, x], [0, 1, y], [0, 0, 1]]
 
         result_matrix = mul_matrices(move_matrix, rotate_matrix)
         result_matrix = mul_matrices(result_matrix, unmove_matrix)
