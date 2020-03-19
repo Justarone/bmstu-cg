@@ -38,7 +38,7 @@ METHODS = ["ЦДА", "Брезенхем (int)", "Брезенхем (float)", "
 COLOURS = ["green", "red", "blue", "black", "white"]
 NOM = len(METHODS)
 
-class colour:
+class Colour:
     def __init__(self, red=0, green=0, blue=0):
         self.red = red
         self.green = green
@@ -51,23 +51,25 @@ class colour:
         res += '0' + hex(self.blue)[2:] if self.blue < 16 else hex(self.blue)[2:]
         return res
 
-    def intensity_apply(self, intense_with, percent):
-        red = self.red + int((intense_with.red - self.red) * percent)
-        green = self.green + int((intense_with.green - self.green) * percent)
-        blue = self.blue + int((intense_with.blue - self.blue) * percent)
-        return colour(red, green, blue)
+    def intensity_apply(self, percent):
+        print("here in")
+        red = int(self.red + (WHITE_COLOUR.red - self.red) * percent)
+        green = int(self.green + (WHITE_COLOUR.green - self.green) * percent)
+        blue = int(self.blue + (WHITE_COLOUR.blue - self.blue) * percent)
+        print(red, green, blue)
+        return Colour(red, green, blue)
 
 
 class Point:
-    def __init__(self, x=0, y=0, colour=colour()):
+    def __init__(self, x=0, y=0, colour=Colour()):
         self.x = x
         self.y = y
         self.colour = colour
 
 
-WHITE_COLOUR = colour(255, 255, 255)
-BLACK_COLOUR = colour()
-GREEN_COLOUR = colour(green=255)
-RED_COLOUR = colour(red=255)
-BLUE_COLOUR = colour(blue=255)
+WHITE_COLOUR = Colour(255, 255, 255)
+BLACK_COLOUR = Colour()
+GREEN_COLOUR = Colour(green=255)
+RED_COLOUR = Colour(red=255)
+BLUE_COLOUR = Colour(blue=255)
 COLOURS_CODES = [GREEN_COLOUR, RED_COLOUR, BLUE_COLOUR, BLACK_COLOUR, WHITE_COLOUR] 

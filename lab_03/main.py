@@ -1,7 +1,7 @@
 from math import pi, cos, sin, sqrt
 import time
 import tkinter as tk
-from config import colour, Point
+from config import Colour, Point
 import config as cfg
 import tkinter.messagebox as mb
 import matplotlib.pyplot as plt; plt.rcdefaults()
@@ -23,7 +23,7 @@ def lda(colour, xb, yb, xe, ye):
     dx /= l
     dy /= l
     x, y = xb, yb
-    for i in range(l):
+    for _ in range(l):
         section.append(Point(int(x), int(y), colour))
         x += dx
         y += dy
@@ -35,8 +35,8 @@ def brezenham_float(colour, xb: int, yb: int, xe: int, ye: int):
     x, y = xb, yb
     dx = xe - xb
     dy = ye - yb
-    sx = dx
-    sy = dy
+    sx = int(np.sign(dx))
+    sy = int(np.sign(dy))
     dx, dy = abs(dx), abs(dy)
 
     if dx > dy:
@@ -49,7 +49,7 @@ def brezenham_float(colour, xb: int, yb: int, xe: int, ye: int):
     e = m - 1 / 2
 
     if not obmen:
-        for i in range(dx):
+        for _ in range(dx):
             section.append(Point(int(x), int(y), colour))
 
             if e >= 0:
@@ -58,7 +58,7 @@ def brezenham_float(colour, xb: int, yb: int, xe: int, ye: int):
             x += sx
             e += m
     else:
-        for i in range(dx):
+        for _ in range(dx):
             section.append(Point(int(x), int(y), colour))
 
             if e >= 0:
@@ -88,7 +88,7 @@ def brezenham_int(colour, xb: int, yb: int, xe: int, ye: int):
     e = dy + dy - dx
 
     if not obmen:
-        for i in range(dx):
+        for _ in range(dx):
             section.append(Point(x, y, colour))
 
             if e >= 0:
@@ -97,7 +97,7 @@ def brezenham_int(colour, xb: int, yb: int, xe: int, ye: int):
             x += sx
             e += dy + dy
     else:
-        for i in range(dx):
+        for _ in range(dx):
             section.append(Point(x, y, colour))
 
             if e >= 0:
@@ -110,12 +110,94 @@ def brezenham_int(colour, xb: int, yb: int, xe: int, ye: int):
 
 
 def brezenham_double(colour, xb, yb, xe, ye):
-    return list()
+    section = list()
+    x, y = xb, yb
+    dx = xe - xb
+    dy = ye - yb
+    sx = int(np.sign(dx))
+    sy = int(np.sign(dy))
+    dx, dy = abs(dx), abs(dy)
+
+    if dx > dy:
+        obmen = 0
+    else:
+        obmen = 1
+        dx, dy = dy, dx
+
+    m = dy / dx
+    e = 1 / 2
+    w = 1 - m
+
+    if not obmen:
+        for _ in range(dx):
+            section.append(Point(int(x), int(y), 
+                                 colour.intensity_apply(e)))
+            section.append(Point(int(x), int(y + sy), 
+                                 colour.intensity_apply(1 - e)))
+            if e >= w:
+                y += sy
+                e -= w
+            x += sx
+            e += m
+    else:
+        for _ in range(dx):
+            section.append(Point(int(x), int(y), 
+                                 colour.intensity_apply(e)))
+            section.append(Point(int(x + sx), int(y), 
+                                 colour.intensity_apply(1 - e)))
+            if e >= w:
+                x += sx
+                e -= w
+            y += sy
+            e += m
+
+    return section
 
 
-def vu(colour, xb, yb, xe, ye):
-    return list()
+def vu(colour: Colour, xb, yb, xe, ye):
+    section = list()
+    x, y = xb, yb
+    dx = xe - xb
+    dy = ye - yb
+    sx = int(np.sign(dx))
+    sy = int(np.sign(dy))
+    dx, dy = abs(dx), abs(dy)
 
+    if dx > dy:
+        obmen = 0
+    else:
+        obmen = 1
+        dx, dy = dy, dx
+
+    ep = - dx
+    e = dy + dy - dx
+
+    if not obmen:
+        for _ in range(dx):
+            section.append(Point(int(x), int(y), 
+                                 colour.intensity_apply((ep / 2 / dx) + 1)))
+            section.append(Point(int(x), int(y + sy), 
+                                 colour.intensity_apply(-ep / 2 / dx)))
+
+            if e >= 0:
+                y += sy
+                e -= dx + dx
+            x += sx
+            e += dy + dy
+    else:
+        for _ in range(dx):
+            section.append(Point(int(x), int(y), 
+                                 colour.intensity_apply((ep / 2 / dx) + 1)))
+            section.append(Point(int(x + sx), int(y), 
+                                 colour.intensity_apply(-ep / 2 / dx)))
+
+            if e >= 0:
+                x += sx
+                e -= dx + dx
+            y += sy
+            e += dy + dy
+
+    return section
 
 def library(colour, xb, yb, xe, ye):
     canvas.create_line(xb, yb, xe, ye, fill=str(colour))
