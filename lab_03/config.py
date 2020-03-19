@@ -52,11 +52,9 @@ class Colour:
         return res
 
     def intensity_apply(self, percent):
-        print("here in")
         red = int(self.red + (WHITE_COLOUR.red - self.red) * percent)
         green = int(self.green + (WHITE_COLOUR.green - self.green) * percent)
         blue = int(self.blue + (WHITE_COLOUR.blue - self.blue) * percent)
-        print(red, green, blue)
         return Colour(red, green, blue)
 
 
@@ -73,3 +71,9 @@ GREEN_COLOUR = Colour(green=255)
 RED_COLOUR = Colour(red=255)
 BLUE_COLOUR = Colour(blue=255)
 COLOURS_CODES = [GREEN_COLOUR, RED_COLOUR, BLUE_COLOUR, BLACK_COLOUR, WHITE_COLOUR] 
+
+
+
+
+
+COEFFS = [0.6, 1, 0.8, 2, 2, 0.8]

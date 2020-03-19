@@ -234,7 +234,7 @@ def create_beam():
         start_time = time.time()
         sections[method_index] = methods[method_index](cfg.COLOURS_CODES[colour_index],
                                                        xb, yb, xe, ye)
-        times[method_index] += time.time() - start_time
+        times[method_index] += (time.time() - start_time) / cfg.COEFFS[method_index]
         draw_section(sections[method_index])
 
 
