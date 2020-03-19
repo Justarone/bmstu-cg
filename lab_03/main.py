@@ -126,7 +126,7 @@ def brezenham_double(colour, xb, yb, xe, ye):
 
     m = dy / dx
     e = 1 / 2
-    w = 1 - m
+    w = 1
 
     if not obmen:
         for _ in range(dx):
@@ -134,7 +134,7 @@ def brezenham_double(colour, xb, yb, xe, ye):
                                  colour.intensity_apply(e)))
             section.append(Point(int(x), int(y + sy), 
                                  colour.intensity_apply(1 - e)))
-            if e >= w:
+            if e >= w - m:
                 y += sy
                 e -= w
             x += sx
@@ -145,7 +145,7 @@ def brezenham_double(colour, xb, yb, xe, ye):
                                  colour.intensity_apply(e)))
             section.append(Point(int(x + sx), int(y), 
                                  colour.intensity_apply(1 - e)))
-            if e >= w:
+            if e >= w - m:
                 x += sx
                 e -= w
             y += sy
@@ -169,7 +169,7 @@ def vu(colour: Colour, xb, yb, xe, ye):
         obmen = 1
         dx, dy = dy, dx
 
-    ep = - dx
+    ep = -dx
     e = dy + dy - dx
 
     if not obmen:
@@ -183,6 +183,7 @@ def vu(colour: Colour, xb, yb, xe, ye):
                 y += sy
                 e -= dx + dx
             x += sx
+            ep = e
             e += dy + dy
     else:
         for _ in range(dx):
@@ -195,6 +196,7 @@ def vu(colour: Colour, xb, yb, xe, ye):
                 x += sx
                 e -= dx + dx
             y += sy
+            ep = e
             e += dy + dy
 
     return section
