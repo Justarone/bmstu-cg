@@ -24,7 +24,7 @@ def lda(colour, xb, yb, xe, ye):
     dy /= l
     x, y = xb, yb
     for _ in range(l):
-        section.append(Point(int(x), int(y), colour))
+        section.append(Point(round(x), round(y), colour))
         x += dx
         y += dy
     return section
@@ -159,8 +159,8 @@ def vu(colour: Colour, xb, yb, xe, ye):
     x, y = xb, yb
     dx = xe - xb
     dy = ye - yb
-    sx = int(np.sign(dx))
-    sy = int(np.sign(dy))
+    sx = 1 if dx == 0 else int(np.sign(dx))
+    sy = 1 if dy == 0 else int(np.sign(dy))
     dx, dy = abs(dx), abs(dy)
 
     if dx > dy:
@@ -169,37 +169,36 @@ def vu(colour: Colour, xb, yb, xe, ye):
         obmen = 1
         dx, dy = dy, dx
 
-    ep = -dx
-    e = dy + dy - dx
+    m = dy / dx
+    e = -1
 
     if not obmen:
         for _ in range(dx):
             section.append(Point(int(x), int(y), 
-                                 colour.intensity_apply(-ep / 2 / dx)))
+                                 colour.intensity_apply(-e)))
             section.append(Point(int(x), int(y + sy), 
-                                 colour.intensity_apply((ep / 2 / dx) + 1)))
+                                 colour.intensity_apply(1 + e)))
 
+            e += m
             if e >= 0:
                 y += sy
-                e -= dx + dx
+                e -= 1
             x += sx
-            ep = e
-            e += dy + dy
     else:
         for _ in range(dx):
             section.append(Point(int(x), int(y), 
-                                 colour.intensity_apply(-ep / 2 / dx)))
+                                 colour.intensity_apply(-e)))
             section.append(Point(int(x + sx), int(y), 
-                                 colour.intensity_apply((ep / 2 / dx) + 1)))
+                                 colour.intensity_apply(1 + e)))
 
+            e += m
             if e >= 0:
                 x += sx
-                e -= dx + dx
+                e -= 1
             y += sy
-            ep = e
-            e += dy + dy
 
     return section
+
 
 def library(colour, xb, yb, xe, ye):
     canvas.create_line(xb, yb, xe, ye, fill=str(colour))
