@@ -131,9 +131,9 @@ def brezenham_double(colour, xb, yb, xe, ye):
     if not obmen:
         for _ in range(dx):
             section.append(Point(int(x), int(y), 
-                                 colour.intensity_apply(e)))
-            section.append(Point(int(x), int(y + sy), 
                                  colour.intensity_apply(1 - e)))
+            section.append(Point(int(x), int(y + sy), 
+                                 colour.intensity_apply(e)))
             if e >= w - m:
                 y += sy
                 e -= w
@@ -142,9 +142,9 @@ def brezenham_double(colour, xb, yb, xe, ye):
     else:
         for _ in range(dx):
             section.append(Point(int(x), int(y), 
-                                 colour.intensity_apply(e)))
-            section.append(Point(int(x + sx), int(y), 
                                  colour.intensity_apply(1 - e)))
+            section.append(Point(int(x + sx), int(y), 
+                                 colour.intensity_apply(e)))
             if e >= w - m:
                 x += sx
                 e -= w
@@ -175,9 +175,9 @@ def vu(colour: Colour, xb, yb, xe, ye):
     if not obmen:
         for _ in range(dx):
             section.append(Point(int(x), int(y), 
-                                 colour.intensity_apply((ep / 2 / dx) + 1)))
-            section.append(Point(int(x), int(y + sy), 
                                  colour.intensity_apply(-ep / 2 / dx)))
+            section.append(Point(int(x), int(y + sy), 
+                                 colour.intensity_apply((ep / 2 / dx) + 1)))
 
             if e >= 0:
                 y += sy
@@ -188,9 +188,9 @@ def vu(colour: Colour, xb, yb, xe, ye):
     else:
         for _ in range(dx):
             section.append(Point(int(x), int(y), 
-                                 colour.intensity_apply((ep / 2 / dx) + 1)))
-            section.append(Point(int(x + sx), int(y), 
                                  colour.intensity_apply(-ep / 2 / dx)))
+            section.append(Point(int(x + sx), int(y), 
+                                 colour.intensity_apply((ep / 2 / dx) + 1)))
 
             if e >= 0:
                 x += sx
