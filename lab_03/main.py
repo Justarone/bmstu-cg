@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # root.bind("<Return>", lambda x: find_solution())
 
 
-def lda(colour, xb, yb, xe, ye):
+def cda(colour, xb, yb, xe, ye):
     section = list()
     dx, dy = xe - xb, ye - yb
     delta_x, delta_y = abs(dx), abs(dy)
@@ -24,17 +24,19 @@ def lda(colour, xb, yb, xe, ye):
     dy /= l
     x, y = xb, yb
     for _ in range(l):
-        section.append(Point(round(x), round(y), colour))
+        section.append(Point(int(x), int(y), colour))
         x += dx
         y += dy
     return section
 
 
-def brezenham_float(colour, xb: int, yb: int, xe: int, ye: int):
+def brezenham_float(colour, xb, yb, xe, ye):
     section = list()
+
     x, y = xb, yb
     dx = xe - xb
     dy = ye - yb
+
     sx = int(np.sign(dx))
     sy = int(np.sign(dy))
     dx, dy = abs(dx), abs(dy)
@@ -282,13 +284,13 @@ def draw_section(section):
     
 
 def draw_pixel(p: Point):
-    canvas.create_line(p.x, p.y, p.x + 1, p.y, fill=str(p.colour))
+    canvas.create_line(p.x, p.y, p.x, p.y, fill=str(p.colour))
 
 
 # if __name__ == "__main__":
 times = [-1 for i in range(6)]
 sections = [list() for i in range(cfg.NOM)]
-methods = [lda, brezenham_int, brezenham_float, brezenham_double, vu, library]
+methods = [cda, brezenham_int, brezenham_float, brezenham_double, vu, library]
 
 root = tk.Tk()
 root.title("Computer graphics 3 lab.")
