@@ -326,15 +326,18 @@ def create_beam():
             rs = int(rs)
             re = int(re)
             step = int(step)
+            step2 = int(re / rs * step)
             num = int(num)
         except ValueError:
             mb.showerror("Ошибка ввода.", "В поля введены некорректные данные.")
             return
 
         cur_r = rs
+        cur_r2 = re
         for _ in range(num):
-            points = methods[cfg.OVAL][method_index](xc, yc, cur_r, re, cfg.COLOURS_CODES[colour_index])
+            points = methods[cfg.OVAL][method_index](xc, yc, cur_r, cur_r2, cfg.COLOURS_CODES[colour_index])
             cur_r += step
+            cur_r2 += step2
             draw_figure(points)
 
 
