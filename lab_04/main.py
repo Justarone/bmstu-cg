@@ -55,16 +55,35 @@ def param_c(x, y, r, colour):
 
 def brezenham_c(xc, yc, r, colour):
     points = list()
-    x = xc
-    y = yc + r
-    ye = yc
 
-    while y > ye:
-        points.append(Point(x, y, colour))
+    x = 0
+    y = r
+    points.append(Point(x + xc, y + yc, colour))
+    delta = 2 - r - r
+    
+    while x < y:
+        if delta <= 0:
+            d1 = delta + delta + y + y - 1
+            x += 1
+            if d1 >= 0:
+                delta += 2 * (x - y + 1)
+                y -= 1
+            else:
+                delta += x + x + 1
 
+        else:
+            d2 = 2 * (delta - x) - 1
+            y -= 1
+            if d2 < 0:
+                delta += 2 * (x - y + 1)
+                x += 1
+            else:
+                delta -= y + y - 1
 
+        points.append(Point(x + xc, y + yc, colour))
 
     
+    dup_biss(points, xc, yc)
     dup_x(points, xc, yc)
     dup_y(points, xc, yc)
 
@@ -104,24 +123,26 @@ def library_c(x, y, r, colour):
     return []
 
 
-def normal_o(x, y, r1, r2, colour):
+def normal_o(xc, yc, a, b, colour):
     points = list()
-    R = r1 * r1 * r2 * r2
+    sqr_a = a * a
+    sqr_b = b * b
+    sqr_ab = sqr_a * sqr_b
 
-    limit1 = round(x + r1 / sqrt(1 + r2 * r2 / r1 / r1))
+    limit1 = round(xc + a / sqrt(1 + sqr_b / sqr_a))
 
-    for a in range(x, limit1):
-        b = y + sqrt(R - (a - x) * (a - x) * r2 * r2) / r1
-        points.append(Point(a, b, colour))
+    for x in range(xc, limit1):
+        y = yc + sqrt(sqr_ab - (x - xc) * (x - xc) * sqr_b) / a
+        points.append(Point(x, y, colour))
 
-    limit2 = round(y + r2 / sqrt(1 + r1 * r1 / r2 / r2))
+    limit2 = round(yc + b / sqrt(1 + sqr_a / sqr_b))
 
-    for b in range(limit2, y - 1, -1):
-        a = x + sqrt(R - (b - y) * (b - y) * r1 * r1) / r2
-        points.append(Point(a, b, colour))
+    for y in range(limit2, yc - 1, -1):
+        x = xc + sqrt(sqr_ab - (y - yc) * (y - yc) * sqr_a) / b
+        points.append(Point(x, y, colour))
 
-    dup_x(points, x, y)
-    dup_y(points, x, y)
+    dup_x(points, xc, yc)
+    dup_y(points, xc, yc)
 
     return points
 
@@ -140,12 +161,87 @@ def param_o(x, y, r1, r2, colour):
     return points
 
 
-def brezenham_o(x, y, r1, r2, colour):
-    return list()
+def brezenham_o(xc, yc, a, b, colour):
+    points = list()
+
+    x = 0
+    y = b
+    sqr_b = b * b
+    sqr_a = a * a
+    points.append(Point(x + xc, y + yc, colour))
+    delta = sqr_b - sqr_a * (2 * b + 1)
+    
+    while y > 0:
+        if delta <= 0:
+            d1 = 2 * delta + sqr_a * (2 * y - 1)
+            x += 1
+            delta += sqr_b * (2 * x + 1)
+            if d1 >= 0:
+                y -= 1
+                delta += sqr_a * (-2 * y + 1)
+
+        else:
+            d2 = 2 * delta + sqr_b * (-2 * x - 1)
+            y -= 1
+            delta += sqr_a * (-2 * y + 1)
+            if d2 < 0:
+                x += 1
+                delta += sqr_b * (2 * x + 1)
+
+        points.append(Point(x + xc, y + yc, colour))
+
+    
+    dup_x(points, xc, yc)
+    dup_y(points, xc, yc)
+
+    return points
 
 
-def middle_point_o(x, y, r1, r2, colour):
-    return list()
+def middle_point_o(xc, yc, a, b, colour):
+    points = list()
+    sqr_a = a * a
+    sqr_b = b * b 
+
+
+    # x, where y` = -1
+    limit = round(a / sqrt(1 + sqr_b / sqr_a))
+
+    x = 0
+    y = b
+    points.append(Point(x + xc, y + yc, colour))
+
+    fu = sqr_b - round(sqr_a * (b - 1 / 4))
+    while x < limit:
+        if fu > 0:
+            y -= 1
+            fu -= 2 * sqr_a * y
+
+        x += 1
+        fu += sqr_b * (2 * x + 1) 
+        points.append(Point(x + xc, y + yc, colour))
+
+    # y, where y` = -1
+    limit = round(b / sqrt(1 + sqr_a / sqr_b))
+
+    y = 0
+    x = a
+    points.append(Point(x + xc, y + yc, colour))
+
+    fu = sqr_a - round(sqr_b * (a - 1 / 4))
+    while y < limit:
+        if fu > 0:
+            x -= 1
+            fu -= 2 * sqr_b * x
+
+        y += 1
+        fu += sqr_a * (2 * y + 1) 
+        points.append(Point(x + xc, y + yc, colour))
+
+
+    dup_y(points, xc, yc)
+    dup_x(points, xc, yc)
+
+    return points
 
 
 def library_o(x, y, r1, r2, colour):
@@ -159,31 +255,44 @@ def clear_canvas():
 
 
 def process_input_c(rs, re, step, num):
-    if rs == None:
-        if re == None or step == None or num == None:
+    if not rs.isdigit():
+        if not re.isdigit() or not step.isdigit() or not num.isdigit():
             re, rs, step, num = None, None, None, None
         else:
+            re = int(re)
+            step = int(step)
+            num = int(num)
             rs = re - step * (num - 1)
 
-    elif re == None:
-        if rs == None or step == None or num == None:
+    elif not re.isdigit():
+        if not rs.isdigit() or not step.isdigit() or not num.isdigit():
             re, rs, step, num = None, None, None, None
         else:
+            rs = int(rs)
+            step = int(step)
+            num = int(num)
             re = rs + step * (num - 1)
 
-    elif step == None:
-        if re == None or rs == None or num == None:
+    elif not step.isdigit():
+        if not re.isdigit() or not rs.isdigit() or not num.isdigit():
             re, rs, step, num = None, None, None, None
         else:
+            rs = int(rs)
+            re = int(re)
+            num = int(num)
             step = (re - rs) // (num - 1)
 
-    elif num == None:
-        if re == None or step == None or rs == None:
+    elif not num.isdigit():
+        if not re.isdigit() or not step.isdigit() or not rs.isdigit():
             re, rs, step, num = None, None, None, None
         else:
+            rs = int(rs)
+            re = int(re)
+            step = int(step)
             num = 1 + (rs - re) // step
 
-    rs, re, step, num = int(rs), int(re), int(step), int(num)
+    if rs != None:
+        rs, re, step, num = int(rs), int(re), int(step), int(num)
     return rs, re, step, num
 
 
@@ -205,7 +314,7 @@ def create_beam():
 
     if figure_index == cfg.CIRCLE:
         rs, re, step, num = process_input_c(rs, re, step, num)
-        if rs == None:
+        if rs == None: 
             mb.showerror("Ошибка ввода.", "В поля введены некорректные данные.")
             return
 
