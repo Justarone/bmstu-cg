@@ -22,7 +22,7 @@ def dup_y(points, x, y):
 
 def dup_biss(points, x, y):
     points += list(map(lambda p: Point(x + p.y - y, y + p.x - x, p.colour), points))
-    
+
 
 def normal_c(x, y, r, colour):
     points = list()
@@ -60,14 +60,14 @@ def brezenham_c(xc, yc, r, colour):
     y = r
     points.append(Point(x + xc, y + yc, colour))
     delta = 2 - r - r
-    
+
     while x < y:
         if delta <= 0:
             d1 = delta + delta + y + y - 1
             x += 1
             if d1 >= 0:
-                delta += 2 * (x - y + 1)
                 y -= 1
+                delta += 2 * (x - y + 1)
             else:
                 delta += x + x + 1
 
@@ -75,14 +75,13 @@ def brezenham_c(xc, yc, r, colour):
             d2 = 2 * (delta - x) - 1
             y -= 1
             if d2 < 0:
-                delta += 2 * (x - y + 1)
                 x += 1
+                delta += 2 * (x - y + 1)
             else:
                 delta -= y + y - 1
 
         points.append(Point(x + xc, y + yc, colour))
 
-    
     dup_biss(points, xc, yc)
     dup_x(points, xc, yc)
     dup_y(points, xc, yc)
@@ -95,21 +94,21 @@ def middle_point_c(xc, yc, r, colour):
     points = list()
     x = r
     y = 0
-    
+
     points.append(Point(xc + x, yc + y, colour))
-    p = 1 - r  
+    p = 1 - r
 
     while x > y:
         y += 1
 
-        if p > 0:  
+        if p >= 0:
             x -= 1
-            p -= x + x - 2
-              
-        p += y + y + 3
-          
+            p -= x + x
+
+        p += y + y + 1
+
         points.append(Point(xc + x, yc + y, colour))
-    
+
     dup_biss(points, xc, yc)
     dup_x(points, xc, yc)
     dup_y(points, xc, yc)
@@ -169,7 +168,7 @@ def brezenham_o(xc, yc, a, b, colour):
     sqr_a = a * a
     points.append(Point(x + xc, y + yc, colour))
     delta = sqr_b - sqr_a * (2 * b + 1)
-    
+
     while y > 0:
         if delta <= 0:
             d1 = 2 * delta + sqr_a * (2 * y - 1)
@@ -189,7 +188,6 @@ def brezenham_o(xc, yc, a, b, colour):
 
         points.append(Point(x + xc, y + yc, colour))
 
-    
     dup_x(points, xc, yc)
     dup_y(points, xc, yc)
 
@@ -199,7 +197,7 @@ def brezenham_o(xc, yc, a, b, colour):
 def middle_point_o(xc, yc, a, b, colour):
     points = list()
     sqr_a = a * a
-    sqr_b = b * b 
+    sqr_b = b * b
 
 
     # x, where y` = -1
@@ -216,7 +214,7 @@ def middle_point_o(xc, yc, a, b, colour):
             fu -= 2 * sqr_a * y
 
         x += 1
-        fu += sqr_b * (2 * x + 1) 
+        fu += sqr_b * (2 * x + 1)
         points.append(Point(x + xc, y + yc, colour))
 
     # y, where y` = -1
@@ -233,7 +231,7 @@ def middle_point_o(xc, yc, a, b, colour):
             fu -= 2 * sqr_b * x
 
         y += 1
-        fu += sqr_a * (2 * y + 1) 
+        fu += sqr_a * (2 * y + 1)
         points.append(Point(x + xc, y + yc, colour))
 
 
