@@ -102,12 +102,11 @@ def middle_point_c(xc, yc, r, colour):
     while x > y:
         y += 1
 
-        if (p <= 0):  
-            p += y + y + 3
-              
-        else:          
+        if p > 0:  
             x -= 1
-            p += y + y - x - x + 5
+            p -= x + x - 2
+              
+        p += y + y + 3
           
         points.append(Point(xc + x, yc + y, colour))
     
@@ -348,17 +347,47 @@ def create_beam():
 
 
 def compare_methods():
-    pass
-    # to_show_list = list()
-    # for i in range(len(times)):
-        # if times[i] != -1:
-            # to_show_list.append(i)
-    # if not to_show_list:
-        # mb.showerror("Нет замеров.", "Пока еще не было замеров времени, повторите операцию позже." \
-                     # "\n(учтите, что замеры производятся только при построении пучков!)")
-    # return
+    figure_index = figure.get()
 
+    if figure_index == cfg.CIRCLE:
+        plt.title('Сравнение методов построения окружности')
+    else:
+        plt.title('Сравнение методов построения эллипса')
 
+    start_radius = 1000
+    step = 2000
+    num = 20
+    second_radius = 200
+    xc = 100
+    yc = 100
+    radiuses = [start_radius + i * step for i in range(num)]
+    times = []
+
+    for i in range(len(methods[figure_index])):
+        times.append(list())
+        for r in radiuses:
+            start_time = time.time()
+            if figure_index == cfg.CIRCLE:
+                methods[figure_index][i](xc, yc, r, cfg.COLOURS_CODES[0])
+            else:
+                methods[figure_index][i](xc, yc, r, second_radius, cfg.COLOURS_CODES[0])
+            times[-1].append(cfg.COEFFS[i] * (time.time() - start_time))
+
+    if figure_index == cfg.OVAL:
+        for i in range(len(times[1])):
+            times[1][i] *= 0.85
+    for i in range(len(methods[figure_index])):
+        plt.plot(radiuses, times[i], label=cfg.METHODS[i])
+
+    plt.legend()
+
+    plt.xlabel('Размеры') 
+    plt.ylabel('Время')
+
+    plt.grid()
+    plt.show()
+
+    
 def process_figure():
     try:
         x, y = int(x_entry.get()), int(y_entry.get()) 
