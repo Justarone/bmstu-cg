@@ -315,7 +315,7 @@ def create_beam():
             mb.showerror("Ошибка ввода.", "В поля введены некорректные данные.")
             return
 
-        for cur_r in range(rs, re, step):
+        for cur_r in range(rs, re + step // 2, step):
             points = methods[cfg.CIRCLE][method_index](xc, yc, cur_r, cfg.COLOURS_CODES[colour_index])
             draw_figure(points)
 
