@@ -1,3 +1,4 @@
+import numpy as np
 from math import pi, cos, sin, sqrt, radians
 import time
 import tkinter as tk
@@ -5,32 +6,36 @@ from tkinter import colorchooser
 from config import Point
 import config as cfg
 import tkinter.messagebox as mb
-import matplotlib.pyplot as plt; plt.rcdefaults()
-import numpy as np
 import matplotlib.pyplot as plt
+plt.rcdefaults()
 
-# button1.bind("<Button-1>", function) - вызов function при нажатии левой кнопкой мыши на кнопку
-# root.bind(chr('a'), function) - действие на кнопке (применяется при наведении на окно root)
-# entry.get()
-# label['text'] = ''
-# root.bind("<Return>", lambda x: find_solution())
 
 draw_color = cfg.DEFAULT_COLOUR
 
-vertex = []
-extrems = []
-mark_list = list()
+vertex_list = [[]]
+extrems = [[]]
 
 pmax = Point()
 pmin = Point(cfg.FIELD_WIDTH, cfg.FIELD_HEIGHT)
 
 
+def get_mark_color():
+    return "#000000" if draw_color != "#000000" else "#FF0000"
+
+
+def get_mark_tuple():
+    return (0, 0, 0) if draw_color != "#000000" else (255, 0, 0)
+
+
 def reset():
-    mark_list.clear()
-    vertex.clear()
-    extrems.clear()
+    global vertex_list, extrems
+    vertex_list = [[]]
+    extrems = [[]]
     pmax.x, pmax.y = 0, 0
     pmin.x, pmin.y = cfg.FIELD_WIDTH, cfg.FIELD_HEIGHT
+
+
+def reset_image():
     img.put("#FFFFFF", to=(0, 0, cfg.FIELD_WIDTH, cfg.FIELD_HEIGHT))
 
 
@@ -38,14 +43,9 @@ def show_info():
     mb.showinfo("Информация.", cfg.INFORMATION)
 
 
-def draw_pixel(p: Point):
-    img.put(p.colour, (p.x, p.y))
-
-
 def draw_section(section):
     for p in section:
-        draw_pixel(p)
-
+        img.put(p.colour, (p.x, p.y))
 
 
 def update_max_area(event):
@@ -59,58 +59,43 @@ def update_max_area(event):
         pmin.y = event.y
 
 
+def update_extrems(vertex_list, i, extrems):
+    if vertex_list[i].y < vertex_list[i - 1].y and vertex_list[i].y < vertex_list[i + 1].y or \
+            vertex_list[i].y > vertex_list[i - 1].y and vertex_list[i].y > vertex_list[i + 1].y:
+        extrems.append(i if i >= 0 else len(vertex_list) - i)
+
+
+def put_point():
+    p = Point(int(x_entry.get()), int(y_entry.get()))
+    left_click(p)
+
 def left_click(event):
     update_max_area(event)
-    vertex.append(Point(event.x, event.y, draw_color))
-    if len(vertex) > 1:
-        section = brezenham_int(draw_color, vertex[-2].x, vertex[-2].y, 
-                                vertex[-1].x, vertex[-1].y)
+    vertex_list[-1].append(Point(event.x, event.y, draw_color))
+    if len(vertex_list[-1]) > 1:
+        section = brezenham_int(draw_color, vertex_list[-1][-2].x, vertex_list[-1][-2].y,
+                                vertex_list[-1][-1].x, vertex_list[-1][-1].y)
 
-        if len(vertex) > 2:
-            if vertex[-2].y < vertex[-1].y and vertex[-2].y < vertex[-3].y or \
-                    vertex[-2].y > vertex[-1].y and vertex[-2].y > vertex[-3].y:
-                extrems.append(len(vertex) - 2)
+        if len(vertex_list[-1]) > 2:
+            update_extrems(vertex_list[-1], len(vertex_list[-1]) - 2, extrems[-1])
 
         draw_section(section)
 
 
 def right_click(event):
-    if len(vertex) > 1:
+    if len(vertex_list[-1]) > 1:
         for i in range(-1, 1):
-            if vertex[i].y < vertex[i - 1].y and vertex[i].y < vertex[i + 1].y or \
-                    vertex[i].y > vertex[i - 1].y and vertex[i].y > vertex[i + 1].y:
-                extrems.append(i)
+            update_extrems(vertex_list[-1], i, extrems[-1])
 
-        section = brezenham_int(draw_color, vertex[-1].x, vertex[-1].y,
-                                      vertex[0].x, vertex[0].y)
+        section = brezenham_int(draw_color, vertex_list[-1][-1].x, vertex_list[-1][-1].y,
+                                vertex_list[-1][0].x, vertex_list[-1][0].y)
         draw_section(section)
-
-        for i in range(len(vertex)):
-            xb = vertex[i].x
-            yb = vertex[i].y
-            xe = vertex[(i + 1) % len(vertex)].x
-            ye = vertex[(i + 1) % len(vertex)].y
-            add_list = brezenham_int(draw_color, xb, yb, xe, ye, True)
-            print(extrems)
-            if i in extrems:
-                prep_list(add_list)
-            if (i + 1) % len(add_list) in extrems:
-                prep_list(add_list, last=True)
-
-            mark_list.extend(add_list)
-
-        # vertex.clear()
-        # extrems.clear()
+        vertex_list.append(list())
+        extrems.append(list())
 
 
-def prep_list(add_list, last=False):
-    index = 0 if not last else len(add_list) - 1
-    add_list.pop(index)
-
-
-def brezenham_int(colour, xb, yb, xe, ye, mark=False):
+def brezenham_int(colour, xb, yb, xe, ye):
     section = list()
-    mark_list = list()
     x, y = xb, yb
     dx = xe - xb
     dy = ye - yb
@@ -128,22 +113,16 @@ def brezenham_int(colour, xb, yb, xe, ye, mark=False):
 
     if not obmen:
         for _ in range(dx):
-            if not mark:
-                section.append(Point(x, y, colour))
+            section.append(Point(x, y, colour))
 
             if e >= 0:
-                if mark:
-                    mark_list.append((x, y))
                 y += sy
                 e -= dx + dx
             x += sx
             e += dy + dy
     else:
         for _ in range(dx):
-            if mark:
-                mark_list.append((x, y))
-            else:
-                section.append(Point(x, y, colour))
+            section.append(Point(x, y, colour))
 
             if e >= 0:
                 x += sx
@@ -151,7 +130,7 @@ def brezenham_int(colour, xb, yb, xe, ye, mark=False):
             y += sy
             e += dy + dy
 
-    return section if not mark else mark_list
+    return section
 
 
 def change_color():
@@ -161,42 +140,73 @@ def change_color():
 
 
 def get_time():
-    pass
+    start_time = time.time()
+    solve()
+    mb.showinfo("Время.", f"Время построения: {time.time() - start_time: 8.7f}")
+
+
+def clear_all():
+    reset()
+    reset_image()
 
 
 def solve():
-    global pmax, pmin
-    print("START MARK")
-    print("START FILL")
+    pause = mode.get()
+    mark_part(vertex_list, extrems)
+    if pause:
+        time.sleep(5)
+        canvas.update()
+    fill_part()
+    reset()
 
 
-    # img.put("#FFFFFF", (0, 0, cfg.FIELD_WIDTH, cfg.FIELD_HEIGHT))
-    # for i in range(len(mark_list)):
-        # img.put("#FF0000", mark_list[i])
-    # for i in range(len(extrems)):
-        # img.put("#0000FF", (vertex[extrems[i]].x, vertex[extrems[i]].y))
+def mark_part(vertex_list, extrems):
+    for j in range(len(vertex_list) - 1):
+        for i in range(len(vertex_list[j])):
+            mark_all_intersections([[vertex_list[j][i].x, vertex_list[j][i].y],
+                                   [vertex_list[j][(i + 1) % len(vertex_list[j])].x,
+                                   vertex_list[j][(i + 1) % len(vertex_list[j])].y]],
+                                   [i in extrems[j],
+                                   (i + 1) % len(vertex_list[j]) in extrems[j]])
 
-    # mark_list = mark_part()
-    fill_part(mark_list)
-    print('DONE')
-    vertex.clear()
-    extrems.clear()
-    pmax.x, pmax.y = 0, 0
-    pmin.x, pmin.y = cfg.FIELD_WIDTH, cfg.FIELD_HEIGHT
+
+def mark_all_intersections(verteces, extrems_bool=(0, 0)):
+    if verteces[0][1] == verteces[1][1]:
+        return
+    if verteces[0][1] > verteces[1][1]:
+        verteces.reverse()
+        extrems_bool.reverse()
+
+    dy = 1
+    dx = (verteces[1][0] - verteces[0][0]) / (verteces[1][1] - verteces[0][1])
+
+    if extrems_bool[0]:
+        verteces[0][1] += dy 
+        verteces[0][0] += dx
+    if extrems_bool[1]:
+        verteces[1][1] -= dy 
+        verteces[1][0] -= dx
+
+    cur_vertex = verteces[0]
+    mark_color = get_mark_color()
+    while cur_vertex[1] < verteces[1][1]:
+        img.put(mark_color, (int(cur_vertex[0]) + 1, cur_vertex[1]))
+        cur_vertex[0] += dx
+        cur_vertex[1] += dy
 
 
 def toggle_color(color):
     return draw_color if color != draw_color else cfg.CANVAS_COLOUR
 
 
-def fill_part(mark_list):
+def fill_part():
     cur_color = cfg.CANVAS_COLOUR
+    mark_color = get_mark_tuple()
     for y in range(pmax.y, pmin.y, -1):
-        for x in range(pmin.x, pmax.x + 1):
-            if (x, y) in mark_list:
+        for x in range(pmin.x - 1, pmax.x + 2):
+            if img.get(x, y) == mark_color:
                 cur_color = toggle_color(cur_color)
-            draw_pixel(Point(x, y, cur_color))
-
+            img.put(cur_color, (x, y))
 
 
 root = tk.Tk()
@@ -219,7 +229,7 @@ mode.set(0)
 mode_radios = list()
 for i in range(len(cfg.MODES)):
     mode_radios.append(tk.Radiobutton(data_frame, text=cfg.MODES[i], bg=cfg.ADD_COLOUR,
-                                        fg=cfg.MAIN_COLOUR, variable=mode, value=i))
+                                      fg=cfg.MAIN_COLOUR, variable=mode, value=i))
 # index = list(points_listbox.curselection())
 
 
@@ -229,11 +239,18 @@ modes_label = tk.Label(data_frame, text="Режимы", font=("Consolas", 14), b
 colour_label = tk.Label(data_frame, text="Цвет", font=("Consolas", 14),
                         bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
+x_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+                   fg=cfg.MAIN_COLOUR, justify="center")
+y_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+                   fg=cfg.MAIN_COLOUR, justify="center")
 
+point_btn = tk.Button(data_frame, text="Добавить точку", font=("Consolas", 14),
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=put_point,
+                      activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 solve_btn = tk.Button(data_frame, text="Закрасить", font=("Consolas", 14),
-                     bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=solve,
-                     activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
-time_btn = tk.Button(data_frame, text="Сравнить время", font=("Consolas", 14),
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=solve,
+                      activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+time_btn = tk.Button(data_frame, text="Измерить время", font=("Consolas", 14),
                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=get_time,
                      activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 info_btn = tk.Button(data_frame, text="Информация", font=("Consolas", 14),
@@ -243,12 +260,12 @@ colour_btn = tk.Button(data_frame, text="", font=("Consolas", 14),
                        bg=cfg.DEFAULT_COLOUR, fg=cfg.ADD_COLOUR, command=change_color,
                        relief=tk.GROOVE)
 clear_btn = tk.Button(data_frame, text="Очистить поле", font=("Consolas", 14),
-                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=reset,
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=clear_all,
                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
 offset = 0
 modes_label.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_WIDTH,
-                   height=cfg.DATA_HEIGHT // cfg.ROWS)
+                  height=cfg.DATA_HEIGHT // cfg.ROWS)
 offset += 1
 for i in range(len(mode_radios)):
     mode_radios[i].place(x=0, y=cfg.SLOT_HEIGHT * offset + i * cfg.SLOT_HEIGHT,
@@ -259,20 +276,35 @@ colour_label.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_W
                    height=cfg.DATA_HEIGHT // cfg.ROWS)
 offset += 1
 
-colour_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+colour_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+offset += 2
+
+x_entry.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+              width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
+y_entry.place(x=cfg.DATA_WIDTH // 2, y=cfg.SLOT_HEIGHT * offset,
+              width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
+offset += 1
+
+point_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+                width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+
 offset = cfg.ROWS - 4
 
-
-solve_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+solve_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+                width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 offset += 1
 
-clear_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+clear_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+                width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 offset += 1
 
-time_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+time_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+               width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 offset += 1
 
-info_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+info_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+               width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 
 
 canvas_frame = tk.Frame(root, bg="white")
@@ -281,8 +313,10 @@ canvas.bind("<Button-1>", left_click)
 canvas.bind("<Button-3>", right_click)
 
 img = tk.PhotoImage(width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
-canvas.create_image((cfg.FIELD_WIDTH // 2, cfg.FIELD_HEIGHT // 2), image=img, state='normal')
+canvas.create_image(
+    (cfg.FIELD_WIDTH // 2, cfg.FIELD_HEIGHT // 2), image=img, state='normal')
 reset()
+reset_image()
 
 canvas_frame.place(x=3 * cfg.BORDERS_WIDTH + cfg.DATA_WIDTH, y=cfg.BORDERS_HEIGHT,
                    width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
