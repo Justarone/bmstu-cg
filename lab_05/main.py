@@ -1,13 +1,10 @@
 import numpy as np
-from math import pi, cos, sin, sqrt, radians
 import time
 import tkinter as tk
 from tkinter import colorchooser
 from config import Point
 import config as cfg
 import tkinter.messagebox as mb
-import matplotlib.pyplot as plt
-plt.rcdefaults()
 
 
 draw_color = cfg.DEFAULT_COLOUR
@@ -203,10 +200,13 @@ def fill_part():
     cur_color = cfg.CANVAS_COLOUR
     mark_color = get_mark_tuple()
     for y in range(pmax.y, pmin.y, -1):
+        start_area = pmin.x - 1
         for x in range(pmin.x - 1, pmax.x + 2):
             if img.get(x, y) == mark_color:
+                img.put(cur_color, (start_area, y, x, y + 1))
                 cur_color = toggle_color(cur_color)
-            img.put(cur_color, (x, y))
+                start_area = x
+        img.put(cur_color, (start_area, y, x, y + 1))
 
 
 root = tk.Tk()
