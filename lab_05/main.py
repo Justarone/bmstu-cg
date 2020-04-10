@@ -151,9 +151,11 @@ def solve():
     pause = mode.get()
     mark_part(vertex_list, extrems)
     if pause:
-        time.sleep(5)
         canvas.update()
-    fill_part()
+        time.sleep(5)
+        fill_part(pause=True)
+    else:
+        fill_part()
     reset()
 
 
@@ -178,10 +180,10 @@ def mark_all_intersections(verteces, extrems_bool=(0, 0)):
     dx = (verteces[1][0] - verteces[0][0]) / (verteces[1][1] - verteces[0][1])
 
     if extrems_bool[0]:
-        verteces[0][1] += dy 
+        verteces[0][1] += dy
         verteces[0][0] += dx
     if extrems_bool[1]:
-        verteces[1][1] -= dy 
+        verteces[1][1] -= dy
         verteces[1][0] -= dx
 
     cur_vertex = verteces[0]
@@ -196,7 +198,7 @@ def toggle_color(color):
     return draw_color if color != draw_color else cfg.CANVAS_COLOUR
 
 
-def fill_part():
+def fill_part(pause=False):
     cur_color = cfg.CANVAS_COLOUR
     mark_color = get_mark_tuple()
     for y in range(pmax.y, pmin.y, -1):
@@ -207,6 +209,9 @@ def fill_part():
                 cur_color = toggle_color(cur_color)
                 start_area = x
         img.put(cur_color, (start_area, y, x, y + 1))
+        if pause:
+            time.sleep(0.02)
+            canvas.update()
 
 
 root = tk.Tk()
