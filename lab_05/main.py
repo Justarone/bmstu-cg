@@ -177,6 +177,7 @@ def mark_all_intersections(verteces, extrems_bool=(0, 0)):
         extrems_bool.reverse()
 
     dy = 1
+    mark_tuple = get_mark_tuple()
     dx = (verteces[1][0] - verteces[0][0]) / (verteces[1][1] - verteces[0][1])
 
     if extrems_bool[0]:
@@ -189,7 +190,10 @@ def mark_all_intersections(verteces, extrems_bool=(0, 0)):
     cur_vertex = verteces[0]
     mark_color = get_mark_color()
     while cur_vertex[1] < verteces[1][1]:
-        img.put(mark_color, (int(cur_vertex[0]) + 1, cur_vertex[1]))
+        if img.get(int(cur_vertex[0]) + 1, cur_vertex[1]) != mark_tuple:
+            img.put(mark_color, (int(cur_vertex[0]) + 1, cur_vertex[1]))
+        else:
+            img.put("#FFFFFF", (int(cur_vertex[0]) + 1, cur_vertex[1]))
         cur_vertex[0] += dx
         cur_vertex[1] += dy
 
