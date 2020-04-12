@@ -1,5 +1,5 @@
-import numpy as np
 import time
+import numpy as np
 import tkinter as tk
 from tkinter import colorchooser
 from config import Point
@@ -7,15 +7,17 @@ import config as cfg
 import tkinter.messagebox as mb
 
 
+vertex_list = list()
 draw_color = cfg.DEFAULT_COLOUR
+fill_color = cfg.DEFAULT_COLOUR
 
-vertex_list = [[]]
-extrems = [[]]
+start_pixel = None
 
-def reset():
-    global vertex_list, extrems
-    vertex_list = [[]]
-    extrems = [[]]
+
+
+def set_start_pixel(event):
+    global start_pixel
+    start_pixel = [event.x, event.y]
 
 
 def reset_image():
@@ -35,21 +37,30 @@ def put_point():
     p = Point(int(x_entry.get()), int(y_entry.get()))
     left_click(p)
 
+
 def left_click(event):
-    vertex_list[-1].append(Point(event.x, event.y, draw_color))
-    if len(vertex_list[-1]) > 1:
-        section = brezenham_int(draw_color, vertex_list[-1][-2].x, vertex_list[-1][-2].y,
-                                vertex_list[-1][-1].x, vertex_list[-1][-1].y)
+    vertex_list.append(Point(event.x, event.y))
+    if len(vertex_list) > 1:
+        section = brezenham_int(draw_color, vertex_list[-2].x, vertex_list[-2].y,
+                                vertex_list[-1].x, vertex_list[-1].y)
 
         draw_section(section)
 
 
 def right_click(event):
-    if len(vertex_list[-1]) > 1:
-        section = brezenham_int(draw_color, vertex_list[-1][-1].x, vertex_list[-1][-1].y,
-                                vertex_list[-1][0].x, vertex_list[-1][0].y)
+    if len(vertex_list) > 2:
+        section = brezenham_int(draw_color, vertex_list[-1].x, vertex_list[-1].y,
+                                vertex_list[0].x, vertex_list[0].y)
         draw_section(section)
-        vertex_list.append(list())
+        vertex_list.clear()
+
+
+def middle_click(event):
+    global start_pixel
+    if start_pixel:
+        img.put(cfg.CANVAS_COLOUR, (start_pixel[0], start_pixel[1]))
+    start_pixel = [event.x, event.y]
+    img.put(fill_color, (event.x, event.y))
 
 
 def brezenham_int(colour, xb, yb, xe, ye):
@@ -97,6 +108,12 @@ def change_color():
     colour_btn.configure(background=draw_color)
 
 
+def change_fill_color():
+    global fill_color
+    fill_color = colorchooser.askcolor(title="select color")[1]
+    fill_color_btn.configure(background=fill_color)
+
+
 def get_time():
     start_time = time.time()
     solve()
@@ -104,17 +121,71 @@ def get_time():
 
 
 def clear_all():
-    reset()
     reset_image()
 
 
 def solve():
     pause = mode.get()
-    reset()
+    stack = [start_pixel]
+
+    fill_area(stack, pause)
+
+
+def get_color_tuple(color):
+    return (int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16))
+
+
+def fill_area(stack, pause):
+    draw_tuple = get_color_tuple(draw_color)
+    fill_tuple = get_color_tuple(fill_color)
+
+    while stack:
+        current_point = stack.pop()
+        img.put(fill_color, current_point)
+
+        x, y = current_point[0] + 1, current_point[1]
+        while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
+            img.put(fill_color, (x, y))
+            x += 1
+        rx = x - 1
+
+        x = current_point[0] - 1
+        while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
+            img.put(fill_color, (x, y))
+            x -= 1
+        lx = x + 1
+
+        for i in [1, -1]:
+            x = lx
+            y = current_point[1] + i
+
+            while x < rx:
+                flag = 0
+                while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple and x < rx:
+                    flag = 1
+                    x += 1
+                
+                if flag:
+                    if x == rx and img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
+                        stack.append([x, y])
+                    else:
+                        stack.append([x - 1, y])
+
+                    flag = 0
+                xi = x
+                while (img.get(x, y) == draw_tuple or img.get(x, y) == fill_tuple) and x < rx:
+                    x += 1
+
+                if x == xi:
+                    x += 1
+        if pause:
+            time.sleep(0.001)
+            canvas.update()
+
 
 
 root = tk.Tk()
-root.title("Computer graphics 5 lab.")
+root.title("Computer graphics 6 lab.")
 root["bg"] = cfg.MAIN_COLOUR
 # root.geometry(str(cfg.WINDOW_WIDTH) + "x" + str(cfg.WINDOW_HEIGHT))
 # root.resizable(height=False, width=False)
@@ -140,8 +211,11 @@ for i in range(len(cfg.MODES)):
 modes_label = tk.Label(data_frame, text="Режимы", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
                        fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
-colour_label = tk.Label(data_frame, text="Цвет", font=("Consolas", 14),
+colour_label = tk.Label(data_frame, text="Цвет границы", font=("Consolas", 14),
                         bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
+
+fill_color_label = tk.Label(data_frame, text="Цвет закраски", font=("Consolas", 14),
+                            bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
 x_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                    fg=cfg.MAIN_COLOUR, justify="center")
@@ -163,6 +237,9 @@ info_btn = tk.Button(data_frame, text="Информация", font=("Consolas", 
 colour_btn = tk.Button(data_frame, text="", font=("Consolas", 14),
                        bg=cfg.DEFAULT_COLOUR, fg=cfg.ADD_COLOUR, command=change_color,
                        relief=tk.GROOVE)
+fill_color_btn = tk.Button(data_frame, text="", font=("Consolas", 14),
+                       bg=cfg.DEFAULT_COLOUR, fg=cfg.ADD_COLOUR, command=change_fill_color,
+                       relief=tk.GROOVE)
 clear_btn = tk.Button(data_frame, text="Очистить поле", font=("Consolas", 14),
                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=clear_all,
                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
@@ -181,6 +258,14 @@ colour_label.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_W
 offset += 1
 
 colour_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
+offset += 2
+
+fill_color_label.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_WIDTH,
+                   height=cfg.DATA_HEIGHT // cfg.ROWS)
+offset += 1
+
+fill_color_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
                  width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 offset += 2
 
@@ -214,12 +299,12 @@ info_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
 canvas_frame = tk.Frame(root, bg="white")
 canvas = tk.Canvas(canvas_frame, bg="white")
 canvas.bind("<Button-1>", left_click)
-canvas.bind("<Button-3>", right_click)
+root.bind("<Return>", right_click)
+canvas.bind("<Button-3>", middle_click)
 
 img = tk.PhotoImage(width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
 canvas.create_image(
     (cfg.FIELD_WIDTH // 2, cfg.FIELD_HEIGHT // 2), image=img, state='normal')
-reset()
 reset_image()
 
 canvas_frame.place(x=3 * cfg.BORDERS_WIDTH + cfg.DATA_WIDTH, y=cfg.BORDERS_HEIGHT,
