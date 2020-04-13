@@ -47,7 +47,7 @@ def left_click(event):
         draw_section(section)
 
 
-def right_click(event):
+def return_click(event):
     if len(vertex_list) > 2:
         section = brezenham_int(draw_color, vertex_list[-1].x, vertex_list[-1].y,
                                 vertex_list[0].x, vertex_list[0].y)
@@ -55,7 +55,7 @@ def right_click(event):
         vertex_list.clear()
 
 
-def middle_click(event):
+def right_click(event):
     global start_pixel
     if start_pixel:
         img.put(cfg.CANVAS_COLOUR, (start_pixel[0], start_pixel[1]))
@@ -145,15 +145,17 @@ def fill_area(stack, pause):
 
         x, y = current_point[0] + 1, current_point[1]
         while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
-            img.put(fill_color, (x, y))
+            # img.put(fill_color, (x, y))
             x += 1
         rx = x - 1
+        img.put(fill_color, (current_point[0] + 1, y, rx + 1, y + 1))
 
         x = current_point[0] - 1
         while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
-            img.put(fill_color, (x, y))
+            # img.put(fill_color, (x, y))
             x -= 1
         lx = x + 1
+        img.put(fill_color, (lx, y, current_point[0], y + 1))
 
         for i in [1, -1]:
             x = lx
@@ -164,7 +166,7 @@ def fill_area(stack, pause):
                 while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple and x < rx:
                     flag = 1
                     x += 1
-                
+
                 if flag:
                     if x == rx and img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
                         stack.append([x, y])
@@ -179,7 +181,7 @@ def fill_area(stack, pause):
                 if x == xi:
                     x += 1
         if pause:
-            time.sleep(0.001)
+            time.sleep(0.1)
             canvas.update()
 
 
@@ -299,8 +301,8 @@ info_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
 canvas_frame = tk.Frame(root, bg="white")
 canvas = tk.Canvas(canvas_frame, bg="white")
 canvas.bind("<Button-1>", left_click)
-root.bind("<Return>", right_click)
-canvas.bind("<Button-3>", middle_click)
+root.bind("<Return>", return_click)
+canvas.bind("<Button-3>", right_click)
 
 img = tk.PhotoImage(width=cfg.FIELD_WIDTH, height=cfg.FIELD_HEIGHT)
 canvas.create_image(
