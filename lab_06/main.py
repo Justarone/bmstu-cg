@@ -161,17 +161,14 @@ def fill_area(stack, pause):
             x = lx
             y = current_point[1] + i
 
-            while x < rx:
+            while x <= rx:
                 flag = 0
-                while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple and x < rx:
+                while img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple and x <= rx:
                     flag = 1
                     x += 1
 
                 if flag:
-                    if x == rx and img.get(x, y) != draw_tuple and img.get(x, y) != fill_tuple:
-                        stack.append([x, y])
-                    else:
-                        stack.append([x - 1, y])
+                    stack.append([x - 1, y])
 
                     flag = 0
                 xi = x
