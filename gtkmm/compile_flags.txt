@@ -1,0 +1,10 @@
+-Iinclude
+
+`pkg-config gtkmm-3.0 --libs --cflags`
+`pkg-config cairomm-1.0 --libs --cflags`
+
+-std=c++14
+-stdlib=libc++
+
+-Wall
+-Werror
