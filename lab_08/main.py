@@ -154,8 +154,8 @@ def get_normals_list(verteces):
 
 
 def cut(section, verteces_list, normals_list):
-    t_start_list = list()
-    t_end_list = list()
+    t_start_list = [0]
+    t_end_list = [1]
     d = get_vect(section[0], section[1])
 
     for i in range(len(verteces_list)):
