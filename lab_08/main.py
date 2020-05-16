@@ -99,23 +99,84 @@ def get_time():
 
 
 def get_vect(p1, p2):
-    return [p2[0] - p1[0], p2[1] - p1[0]]
+    return [p2[0] - p1[0], p2[1] - p1[1]]
 
 
 def vect_mul(v1, v2):
     return v1[0] * v2[1] - v1[1] * v2[0]
 
+def scalar_mul(v1, v2):
+    return v1[0] * v2[0] + v1[1] * v2[1]
+
 
 def check_polygon():
     if len(verteces_list) < 3:
         return False
-    sign = 1 if vect_mul(get_vect(verteces_list[0], verteces_list[1]),
-                         get_vect(verteces_list[1], verteces_list[2])) > 0 else -1
+    sign = 1 if vect_mul(get_vect(verteces_list[1], verteces_list[2]),
+                         get_vect(verteces_list[0], verteces_list[1])) > 0 else -1
     for i in range(3, len(verteces_list)):
-        if sign * vect_mul(get_vect(verteces_list[i - 2], verteces_list[i - 1]),
-                           get_vect(verteces_list[i - 1], verteces_list[i])) < 0:
+        if sign * vect_mul(get_vect(verteces_list[i - 1], verteces_list[i]),
+                           get_vect(verteces_list[i - 2], verteces_list[i - 1])) < 0:
             return False
+
+    if sign < 0:
+        verteces_list.reverse()
+
+    # CHECK: for verteces order
+    # for i, c in enumerate(verteces_list):
+        # canvas.create_oval(c[0] - i * 3, c[1] - i * 3, c[0] + i * 3, c[1] + i * 3, fill="green")
+
     return True
+
+
+# cp = check point
+def get_normal(p1, p2, cp):
+    vect = get_vect(p1, p2)
+    norm = [1, 0] if vect[0] == 0 else [-vect[1] / vect[0], 1]
+    if scalar_mul(get_vect(p2, cp), norm) < 0:
+        for i in range(len(norm)):
+            norm[i] = -norm[i]
+
+    # CHECK: for normal direction and side
+    # center = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
+    # draw_section(center[0], center[1], center[0] + 10 * norm[0], center[1] + 10 * norm[1], cutter_color)
+
+    return norm
+
+
+def get_normals_list(verteces):
+    length = len(verteces_list)
+    normal_list = list()
+    for i in range(length):
+        normal_list.append(get_normal(verteces[i], verteces[(i + 1) % length], verteces[(i + 2) % length]))
+
+    return normal_list
+
+
+def cut(section, verteces_list, normals_list):
+    t_start_list = list()
+    t_end_list = list()
+    d = get_vect(section[1], section[0])
+
+    for i in range(len(verteces_list)):
+        wi = get_vect(verteces_list[i], section[0])
+        Dck = scalar_mul(d, normals_list[i])
+        Wck = scalar_mul(wi, normals_list[i])
+        if Dck == 0:
+            continue
+        t = -Wck / Dck
+        if Dck > 0:
+            t_start_list.append(t)
+        else:
+            t_end_list.append(t)
+    
+    t_start = max(t_start_list)
+    t_end = min(t_end_list)
+
+    if t_start < t_end:
+        p1 = [section[0][0] + d[0] * t_start, section[0][1] + d[1] * t_start]
+        p2 = [section[0][0] + d[0] * t_end, section[0][1] + d[1] * t_end]
+        draw_section(*p1, *p2, res_color)
 
 
 def solve():
@@ -123,7 +184,9 @@ def solve():
         mb.showerror("Невыпуклый многоугольник", "Для осуществления отсечения отрезка алгоритмом Кируса-Бека \
                      прямоугольник должен быть выпуклым")
         return
-    mb.showinfo("Выпуклый многоугольник", "Все хорошо!")
+    normals_list = get_normals_list(verteces_list)
+    for section in sections:
+        cut(section, verteces_list, normals_list)
 
 
 root = tk.Tk()
