@@ -13,16 +13,20 @@ verteces_list = []
 sections = []
 last_point = [None, None]
 
+
 def clear_all():
     clear_canvas() 
     sections.clear()
     verteces_list.clear()
 
+
 def clear_canvas():
     canvas.delete('all')
 
+
 def show_info():
     mb.showinfo("Информация.", cfg.INFORMATION)
+
 
 def left_click(event):
     if last_point[0]:
@@ -57,7 +61,6 @@ def read_cutter_vertex():
         draw_section(*verteces_list[-1], *verteces_list[-2], cutter_color)
 
 
-
 def draw_section(xb, yb, xe, ye, color):
     canvas.create_line(xb, yb, xe, ye, fill=color)
 
@@ -81,6 +84,7 @@ def change_sect_color():
     global sect_color
     sect_color = colorchooser.askcolor(title="select color")[1]
     sect_color_btn.configure(background=sect_color)
+
 
 def change_res_color():
     global res_color
