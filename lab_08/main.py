@@ -56,8 +56,8 @@ def read_cutter_vertex():
     except:
         mb.showerror("Неверный ввод", "Не удалось считать коориданаты очередной вершины (учтите, что при работе с растром \
                       коориданаты должны быть целыми)")
-    verteces_list.append(x, y)
-    if len(verteces_list) > 2:
+    verteces_list.append([x, y])
+    if len(verteces_list) >= 2:
         draw_section(*verteces_list[-1], *verteces_list[-2], cutter_color)
 
 
@@ -156,14 +156,19 @@ def get_normals_list(verteces):
 def cut(section, verteces_list, normals_list):
     t_start_list = list()
     t_end_list = list()
-    d = get_vect(section[1], section[0])
+    d = get_vect(section[0], section[1])
 
     for i in range(len(verteces_list)):
         wi = get_vect(verteces_list[i], section[0])
         Dck = scalar_mul(d, normals_list[i])
         Wck = scalar_mul(wi, normals_list[i])
+
         if Dck == 0:
-            continue
+            if scalar_mul(wi, normals_list[i]) < 0:
+                return
+            else:
+                continue
+
         t = -Wck / Dck
         if Dck > 0:
             t_start_list.append(t)
@@ -174,8 +179,8 @@ def cut(section, verteces_list, normals_list):
     t_end = min(t_end_list)
 
     if t_start < t_end:
-        p1 = [section[0][0] + d[0] * t_start, section[0][1] + d[1] * t_start]
-        p2 = [section[0][0] + d[0] * t_end, section[0][1] + d[1] * t_end]
+        p1 = [round(section[0][0] + d[0] * t_start), round(section[0][1] + d[1] * t_start)]
+        p2 = [round(section[0][0] + d[0] * t_end), round(section[0][1] + d[1] * t_end)]
         draw_section(*p1, *p2, res_color)
 
 
@@ -235,7 +240,7 @@ cutter_btn = tk.Button(data_frame, text="Добавить вершину", font=
                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=read_cutter_vertex,
                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 close_btn = tk.Button(data_frame, text="Замкнуть отсекатель", font=("Consolas", 14),
-                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=lambda x: return_click(),
+                      bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=lambda: return_click(0),
                       activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 vertex_btn = tk.Button(data_frame, text="Применить", font=("Consolas", 14),
                       bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=read_vertex,
