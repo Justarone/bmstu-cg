@@ -98,8 +98,32 @@ def get_time():
     mb.showinfo("Время.", f"Время построения: {time.time() - start_time: 8.7f}")
 
 
+def get_vect(p1, p2):
+    return [p2[0] - p1[0], p2[1] - p1[0]]
+
+
+def vect_mul(v1, v2):
+    return v1[0] * v2[1] - v1[1] * v2[0]
+
+
+def check_polygon():
+    if len(verteces_list) < 3:
+        return False
+    sign = 1 if vect_mul(get_vect(verteces_list[0], verteces_list[1]),
+                         get_vect(verteces_list[1], verteces_list[2])) > 0 else -1
+    for i in range(3, len(verteces_list)):
+        if sign * vect_mul(get_vect(verteces_list[i - 2], verteces_list[i - 1]),
+                           get_vect(verteces_list[i - 1], verteces_list[i])) < 0:
+            return False
+    return True
+
+
 def solve():
-    pass
+    if not check_polygon():
+        mb.showerror("Невыпуклый многоугольник", "Для осуществления отсечения отрезка алгоритмом Кируса-Бека \
+                     прямоугольник должен быть выпуклым")
+        return
+    mb.showinfo("Выпуклый многоугольник", "Все хорошо!")
 
 
 root = tk.Tk()
