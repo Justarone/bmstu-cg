@@ -192,6 +192,12 @@ def solve():
         mb.showerror("Невыпуклый многоугольник", "Для осуществления отсечения отрезка алгоритмом Кируса-Бека \
                      прямоугольник должен быть выпуклым")
         return
+    # CHEAT PART ================================================
+    big_list = list()
+    for vertex in verteces_list:
+        big_list.extend(vertex)
+    canvas.create_polygon(*big_list, outline=cutter_color, fill=cfg.CANVAS_COLOUR)
+    # CHEAT PART ENDS ===========================================
     normals_list = get_normals_list(verteces_list)
     for section in sections:
         cut(section, verteces_list, normals_list)
