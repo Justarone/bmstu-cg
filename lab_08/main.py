@@ -159,7 +159,10 @@ def cut(section, verteces_list, normals_list):
     d = get_vect(section[0], section[1])
 
     for i in range(len(verteces_list)):
-        wi = get_vect(verteces_list[i], section[0])
+        if verteces_list[i] != section[0]:
+            wi = get_vect(verteces_list[i], section[0])
+        else:
+            wi = get_vect(verteces_list[(i + 1) % len(verteces_list)], section[0])
         Dck = scalar_mul(d, normals_list[i])
         Wck = scalar_mul(wi, normals_list[i])
 
