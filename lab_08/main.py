@@ -154,8 +154,8 @@ def get_normals_list(verteces):
 
 
 def cut(section, verteces_list, normals_list):
-    t_start_list = [0]
-    t_end_list = [1]
+    t_start = 0
+    t_end = 1
     d = get_vect(section[0], section[1])
 
     for i in range(len(verteces_list)):
@@ -174,13 +174,15 @@ def cut(section, verteces_list, normals_list):
 
         t = -Wck / Dck
         if Dck > 0:
-            t_start_list.append(t)
+            if t > t_start:
+                t_start = t
         else:
-            t_end_list.append(t)
-    
-    t_start = max(t_start_list)
-    t_end = min(t_end_list)
+            if t < t_end:
+                t_end = t
 
+        if t_start > t_end:
+            break
+    
     if t_start < t_end:
         p1 = [round(section[0][0] + d[0] * t_start), round(section[0][1] + d[1] * t_start)]
         p2 = [round(section[0][0] + d[0] * t_end), round(section[0][1] + d[1] * t_end)]
