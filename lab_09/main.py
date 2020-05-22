@@ -68,6 +68,12 @@ def draw_section(xb, yb, xe, ye, color):
     canvas.create_line(xb, yb, xe, ye, fill=color)
 
 
+def draw_figure(figure):
+    for i in range(len(figure)):
+        draw_section(figure[i][0], figure[i][1], figure[(i + 1) % len(figure)][0],
+                     figure[(i + 1) % len(figure)][1], color=res_color)
+
+
 def read_vertex():
     try:
         x = int(x_entry.get())
@@ -145,7 +151,7 @@ def get_normal(p1, p2, cp):
 
 
 def get_normals_list(verteces):
-    length = len(verteces)
+    length = len(verteces_list)
     normal_list = list()
     for i in range(length):
         normal_list.append(get_normal(verteces[i], verteces[(i + 1) % length], verteces[(i + 2) % length]))
@@ -153,8 +159,62 @@ def get_normals_list(verteces):
     return normal_list
 
 
-def cut_figure():
-    pass
+def check_point(point, p1, p2):
+    return True if vect_mul(get_vect(p1, p2), get_vect(p1, point)) >= 0 else False
+
+
+def find_intersection(section, edge, normal):
+    wi = get_vect(edge[0], section[0])
+    d = get_vect(section[0], section[1])
+    Wck = scalar_mul(wi, normal)
+    Dck = scalar_mul(d, normal)
+
+    diff = [section[1][0] - section[0][0], section[1][1] - section[0][1]]
+    t = -Wck / Dck
+    # print("t equals: ", t)
+
+    return [section[0][0] + diff[0] * t, section[0][1] + diff[1] * t]
+
+
+
+def edgecut_figure(figure, edge, normal):
+    res_figure = list()
+    if len(figure) < 3:
+        return []
+
+    prev_check = check_point(figure[0], *edge)
+    if prev_check:
+        res_figure.append(figure[0])
+
+    for i in range(1, len(figure) + 1):
+        cur_check = check_point(figure[i % len(figure)], *edge)
+
+        if prev_check:
+            if cur_check:
+                res_figure.append(figure[i % len(figure)])
+            else:
+                res_figure.append(find_intersection([figure[i - 1], figure[i % len(figure)]], edge, normal))
+
+        else:
+            if cur_check:
+                res_figure.append(find_intersection([figure[i - 1], figure[i % len(figure)]], edge, normal))
+                res_figure.append(figure[i % len(figure)])
+
+        prev_check = cur_check
+
+    print(res_figure)
+    return res_figure
+
+
+def cut_figure(figure, cutter_verteces, normals_list):
+    res_figure = figure
+    for i in range(len(cutter_verteces)):
+        cur_edge = [cutter_verteces[i], cutter_verteces[(i + 1) % len(cutter_verteces)]]
+        res_figure = edgecut_figure(res_figure, cur_edge, normals_list[i])
+        if len(res_figure) < 3:
+            return []
+
+    return res_figure
 
 
 def solve():
@@ -169,7 +229,9 @@ def solve():
     canvas.create_polygon(*big_list, outline=cutter_color, fill=cfg.CANVAS_COLOUR)
     # CHEAT PART ENDS ===========================================
     normals_list = get_normals_list(verteces_list)
-    cut_figure()
+    cutted_figure = cut_figure(figure_list, verteces_list, normals_list)
+    print("cutted_figure: ", cutted_figure)
+    draw_figure(cutted_figure)
 
 
 root = tk.Tk()
@@ -272,13 +334,13 @@ cutter_label.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_W
 offset += 1
 cutter_x_label.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_WIDTH // 2,
                        height=cfg.DATA_HEIGHT // cfg.ROWS)
-cutter_y_label.place(x=cfg.DATA_WIDTH // 2, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_WIDTH // 2,
-                       height=cfg.DATA_HEIGHT // cfg.ROWS)
+cutter_y_label.place(x=cfg.DATA_WIDTH // 2, y=cfg.DATA_HEIGHT * offset // cfg.ROWS,
+                     width=cfg.DATA_WIDTH // 2, height=cfg.DATA_HEIGHT // cfg.ROWS)
 offset += 1
 cutter_x_entry.place(x=0, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_WIDTH // 2,
                        height=cfg.DATA_HEIGHT // cfg.ROWS)
-cutter_y_entry.place(x=cfg.DATA_WIDTH // 2, y=cfg.DATA_HEIGHT * offset // cfg.ROWS, width=cfg.DATA_WIDTH // 2,
-                       height=cfg.DATA_HEIGHT // cfg.ROWS)
+cutter_y_entry.place(x=cfg.DATA_WIDTH // 2, y=cfg.DATA_HEIGHT * offset // cfg.ROWS,
+                     width=cfg.DATA_WIDTH // 2, height=cfg.DATA_HEIGHT // cfg.ROWS)
 
 offset += 1
 cutter_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
@@ -289,10 +351,12 @@ offset += 3
 vertex_label.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 offset += 1
 x_label.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
-y_label.place(x=cfg.DATA_WIDTH // 2, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
+y_label.place(x=cfg.DATA_WIDTH // 2, y=cfg.SLOT_HEIGHT * offset,
+              width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
 offset += 1
 x_entry.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
-y_entry.place(x=cfg.DATA_WIDTH // 2, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
+y_entry.place(x=cfg.DATA_WIDTH // 2, y=cfg.SLOT_HEIGHT * offset,
+              width=cfg.DATA_WIDTH // 2, height=cfg.SLOT_HEIGHT)
 offset += 1
 vertex_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 
