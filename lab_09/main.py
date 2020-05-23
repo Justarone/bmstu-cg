@@ -18,6 +18,7 @@ def clear_all():
     clear_canvas() 
     sections.clear()
     verteces_list.clear()
+    figure_list.clear()
 
 
 def clear_canvas():
@@ -70,8 +71,12 @@ def draw_section(xb, yb, xe, ye, color):
 
 def draw_figure(figure):
     for i in range(len(figure)):
-        draw_section(figure[i][0], figure[i][1], figure[(i + 1) % len(figure)][0],
-                     figure[(i + 1) % len(figure)][1], color=res_color)
+        #======================================== CHEAT ===================================
+        canvas.create_line(figure[i][0], figure[i][1], figure[(i + 1) % len(figure)][0],
+                     figure[(i + 1) % len(figure)][1], fill=cfg.CANVAS_COLOUR, width=2)
+        # =================================================================================
+        canvas.create_line(figure[i][0], figure[i][1], figure[(i + 1) % len(figure)][0],
+                     figure[(i + 1) % len(figure)][1], fill=res_color)
 
 
 def read_vertex():
@@ -160,12 +165,6 @@ def get_normals_list(verteces):
 
 
 def check_point(point, p1, p2):
-    # print("points: ", point, p1, p2)
-    # canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill="green", arrow=tk.LAST, width=3)
-    # canvas.create_line(p1[0], p1[1], point[0], point[1], fill="blue", arrow=tk.LAST, width=3)
-    # canvas.update()
-    # print("vect mul is: ", vect_mul(get_vect(p1, p2), get_vect(p1, point)))
-    # time.sleep(10)
     return True if vect_mul(get_vect(p1, p2), get_vect(p1, point)) <= 0 else False
 
 
@@ -228,10 +227,10 @@ def solve():
                      прямоугольник должен быть выпуклым")
         return
     # CHEAT PART ================================================
-    big_list = list()
-    for vertex in verteces_list:
-        big_list.extend(vertex)
-    canvas.create_polygon(*big_list, outline=cutter_color, fill=cfg.CANVAS_COLOUR)
+    # big_list = list()
+    # for vertex in verteces_list:
+        # big_list.extend(vertex)
+    # canvas.create_polygon(*big_list, outline=cutter_color, fill=cfg.CANVAS_COLOUR)
     # CHEAT PART ENDS ===========================================
     normals_list = get_normals_list(verteces_list)
     cutted_figure = cut_figure(figure_list, verteces_list, normals_list)
