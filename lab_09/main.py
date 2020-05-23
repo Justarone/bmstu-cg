@@ -65,20 +65,6 @@ def read_cutter_vertex():
         draw_section(*verteces_list[-1], *verteces_list[-2], cutter_color)
 
 
-def draw_section(xb, yb, xe, ye, color):
-    canvas.create_line(xb, yb, xe, ye, fill=color)
-
-
-def draw_figure(figure):
-    for i in range(len(figure)):
-        #======================================== CHEAT ===================================
-        canvas.create_line(figure[i][0], figure[i][1], figure[(i + 1) % len(figure)][0],
-                     figure[(i + 1) % len(figure)][1], fill=cfg.CANVAS_COLOUR, width=2)
-        # =================================================================================
-        canvas.create_line(figure[i][0], figure[i][1], figure[(i + 1) % len(figure)][0],
-                     figure[(i + 1) % len(figure)][1], fill=res_color)
-
-
 def read_vertex():
     try:
         x = int(x_entry.get())
@@ -111,6 +97,61 @@ def change_res_color():
 
 def get_vect(p1, p2):
     return [p2[0] - p1[0], p2[1] - p1[1]]
+
+
+def draw_section(xb, yb, xe, ye, color):
+        #======================================== CHEAT ===================================
+        canvas.create_line(xb, yb, xe, ye, fill=cfg.CANVAS_COLOUR, width=2)
+        # =================================================================================
+        canvas.create_line(xb, yb, xe, ye, fill=color)
+
+
+def make_uniq(sections):
+    for section in sections:
+        section.sort()
+    return list(filter(lambda x: (sections.count(x) % 2) == 1, sections))
+
+
+def point_in_section(point, section):
+    if abs(vect_mul(get_vect(point, section[0]), get_vect(*section))) <= 1e-6:
+        if (section[0] < point < section[1] or section[1] < point < section[0]):
+            return True
+    return False
+
+
+def get_sections(section, rest_points):
+    points_list = [section[0], section[1]]
+    for p in rest_points:
+        if point_in_section(p, section):
+            points_list.append(p)
+
+    points_list.sort()
+
+    sections_list = list()
+    for i in range(len(points_list) - 1):
+        sections_list.append([points_list[i], points_list[i + 1]])
+
+    return sections_list
+
+
+
+def get_uniq_sections(figure):
+    all_sections = list()
+    rest_points = figure[2:]
+    for i in range(len(figure)):
+        cur_section = [figure[i], figure[(i + 1) % len(figure)]]
+
+        all_sections.extend(get_sections(cur_section, rest_points))
+
+        rest_points.pop(0)
+        rest_points.append(figure[i])
+
+    return make_uniq(all_sections)
+
+
+def draw_figure(figure):
+    for section in get_uniq_sections(figure):
+        draw_section(round(section[0][0]), round(section[0][1]), round(section[1][0]), round(section[1][1]), res_color)
 
 
 def vect_mul(v1, v2):
@@ -176,9 +217,8 @@ def find_intersection(section, edge, normal):
 
     diff = [section[1][0] - section[0][0], section[1][1] - section[0][1]]
     t = -Wck / Dck
-    # print("t equals: ", t)
 
-    return [round(section[0][0] + diff[0] * t), round(section[0][1] + diff[1] * t)]
+    return [section[0][0] + diff[0] * t, section[0][1] + diff[1] * t]
 
 
 
@@ -188,8 +228,6 @@ def edgecut_figure(figure, edge, normal):
         return []
 
     prev_check = check_point(figure[0], *edge)
-    if prev_check:
-        res_figure.append(figure[0])
 
     for i in range(1, len(figure) + 1):
         cur_check = check_point(figure[i % len(figure)], *edge)
@@ -226,15 +264,8 @@ def solve():
         mb.showerror("Невыпуклый многоугольник", "Для осуществления отсечения отрезка алгоритмом Кируса-Бека \
                      прямоугольник должен быть выпуклым")
         return
-    # CHEAT PART ================================================
-    # big_list = list()
-    # for vertex in verteces_list:
-        # big_list.extend(vertex)
-    # canvas.create_polygon(*big_list, outline=cutter_color, fill=cfg.CANVAS_COLOUR)
-    # CHEAT PART ENDS ===========================================
     normals_list = get_normals_list(verteces_list)
     cutted_figure = cut_figure(figure_list, verteces_list, normals_list)
-    # print("cutted_figure: ", cutted_figure)
     draw_figure(cutted_figure)
 
 
