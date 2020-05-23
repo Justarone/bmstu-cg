@@ -160,7 +160,13 @@ def get_normals_list(verteces):
 
 
 def check_point(point, p1, p2):
-    return True if vect_mul(get_vect(p1, p2), get_vect(p1, point)) >= 0 else False
+    # print("points: ", point, p1, p2)
+    # canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill="green", arrow=tk.LAST, width=3)
+    # canvas.create_line(p1[0], p1[1], point[0], point[1], fill="blue", arrow=tk.LAST, width=3)
+    # canvas.update()
+    # print("vect mul is: ", vect_mul(get_vect(p1, p2), get_vect(p1, point)))
+    # time.sleep(10)
+    return True if vect_mul(get_vect(p1, p2), get_vect(p1, point)) <= 0 else False
 
 
 def find_intersection(section, edge, normal):
@@ -173,7 +179,7 @@ def find_intersection(section, edge, normal):
     t = -Wck / Dck
     # print("t equals: ", t)
 
-    return [section[0][0] + diff[0] * t, section[0][1] + diff[1] * t]
+    return [round(section[0][0] + diff[0] * t), round(section[0][1] + diff[1] * t)]
 
 
 
@@ -202,7 +208,6 @@ def edgecut_figure(figure, edge, normal):
 
         prev_check = cur_check
 
-    print(res_figure)
     return res_figure
 
 
@@ -230,7 +235,7 @@ def solve():
     # CHEAT PART ENDS ===========================================
     normals_list = get_normals_list(verteces_list)
     cutted_figure = cut_figure(figure_list, verteces_list, normals_list)
-    print("cutted_figure: ", cutted_figure)
+    # print("cutted_figure: ", cutted_figure)
     draw_figure(cutted_figure)
 
 
