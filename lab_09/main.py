@@ -281,9 +281,9 @@ data_frame.place(x=int(cfg.BORDERS_WIDTH), y=int(cfg.BORDERS_HEIGHT),
                  height=cfg.DATA_HEIGHT
                  )
 
-cutter_color_label = tk.Label(data_frame, text="Цвет регулярного отсекателя", font=("Consolas", 14),
+cutter_color_label = tk.Label(data_frame, text="Цвет отсекателя", font=("Consolas", 14),
                             bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
-sect_color_label = tk.Label(data_frame, text="Цвет отрезков", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
+sect_color_label = tk.Label(data_frame, text="Цвет многоугольника", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
                             fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 res_color_label = tk.Label(data_frame, text="Цвет результата", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
                            fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
@@ -395,6 +395,8 @@ y_entry.place(x=cfg.DATA_WIDTH // 2, y=cfg.SLOT_HEIGHT * offset,
 offset += 1
 vertex_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 
+offset += 2
+close_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 
 offset = cfg.ROWS - 3
 
