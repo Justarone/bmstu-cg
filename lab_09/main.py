@@ -74,7 +74,7 @@ def read_vertex():
                       коориданаты должны быть целыми)")
     figure_list.append([x, y])
     if len(figure_list) >= 2:
-        draw_section(*figure_list[-1], *figure_list[-2], cutter_color)
+        draw_section(*figure_list[-1], *figure_list[-2], sect_color)
 
 
 def change_cutter_color():
