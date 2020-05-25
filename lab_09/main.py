@@ -270,7 +270,7 @@ def solve():
 
 
 root = tk.Tk()
-root.title("Computer graphics 8 lab.")
+root.title("Computer graphics 9 lab.")
 root["bg"] = cfg.MAIN_COLOUR
 
 data_frame = tk.Frame(root)
