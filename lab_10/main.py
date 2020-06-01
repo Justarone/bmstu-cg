@@ -68,6 +68,10 @@ y_label = tk.Label(data_frame, text="y", font=("Consolas", 14), bg=cfg.MAIN_COLO
                    fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 z_label = tk.Label(data_frame, text="z", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
                    fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
+xlabel = tk.Label(data_frame, text="x", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
+                   fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
+zlabel = tk.Label(data_frame, text="z", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
+                   fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 from_label = tk.Label(data_frame, text="От", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
                       fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 to_label = tk.Label(data_frame, text="До", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
@@ -82,11 +86,17 @@ y_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                    fg=cfg.MAIN_COLOUR, justify="center")
 z_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                    fg=cfg.MAIN_COLOUR, justify="center")
-from_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+xfrom_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                       fg=cfg.MAIN_COLOUR, justify="center")
-to_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+xto_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                     fg=cfg.MAIN_COLOUR, justify="center")
-step_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+xstep_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+                      fg=cfg.MAIN_COLOUR, justify="center")
+zfrom_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+                      fg=cfg.MAIN_COLOUR, justify="center")
+zto_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+                    fg=cfg.MAIN_COLOUR, justify="center")
+zstep_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                       fg=cfg.MAIN_COLOUR, justify="center")
 
 
@@ -125,19 +135,29 @@ offset += 2
 meta_label.place(x=0, y=cfg.SLOT_HEIGHT * offset,
                  width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 
-from_label.place(x=0, y=cfg.SLOT_HEIGHT * offset,
-                 width=cfg.DATA_WIDTH // 3, height=cfg.SLOT_HEIGHT)
-to_label.place(x=cfg.DATA_WIDTH // 3, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 3,
+from_label.place(x=cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH // 4, height=cfg.SLOT_HEIGHT)
+to_label.place(x=2 * cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4,
                height=cfg.SLOT_HEIGHT)
-step_label.place(x=2 * cfg.DATA_WIDTH // 3, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 3,
+step_label.place(x=3 * cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4,
                  height=cfg.SLOT_HEIGHT)
 offset += 1
 
-from_entry.place(x=0, y=cfg.SLOT_HEIGHT * offset,
-                 width=cfg.DATA_WIDTH // 3, height=cfg.SLOT_HEIGHT)
-to_entry.place(x=cfg.DATA_WIDTH // 3, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 3,
+xlabel.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4, height=cfg.SLOT_HEIGHT)
+xfrom_entry.place(x=cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH // 4, height=cfg.SLOT_HEIGHT)
+xto_entry.place(x=2 * cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4,
                height=cfg.SLOT_HEIGHT)
-step_entry.place(x=2 * cfg.DATA_WIDTH // 3, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 3,
+xstep_entry.place(x=3 * cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4,
+                 height=cfg.SLOT_HEIGHT)
+offset += 1
+
+zlabel.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4, height=cfg.SLOT_HEIGHT)
+zfrom_entry.place(x=cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH // 4, height=cfg.SLOT_HEIGHT)
+zto_entry.place(x=2 * cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4,
+               height=cfg.SLOT_HEIGHT)
+zstep_entry.place(x=3 * cfg.DATA_WIDTH // 4, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 4,
                  height=cfg.SLOT_HEIGHT)
 offset += 1
 
