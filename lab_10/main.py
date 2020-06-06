@@ -9,13 +9,14 @@ from numpy import arange
 
 color = cfg.DEFAULT_COLOUR
 
+sf = 48
 x_from = -10
 x_to = 10
-x_step = 0.5
+x_step = 0.1
 
 z_from = -10
 z_to = 10
-z_step = 0.5
+z_step = 0.1
 
 trans_matrix = [[int(i == j) for i in range(4)] for j in range(4)]
 
@@ -59,7 +60,7 @@ def trans_point(point):
             res_point[i] += point[j] * trans_matrix[j][i]
 
     for i in range(3):
-        res_point[i] *= cfg.SF # x, y, z ==> SF * x, SF * y, SF * z
+        res_point[i] *= sf # x, y, z ==> SF * x, SF * y, SF * z
 
     res_point[0] += cfg.FIELD_WIDTH / 2
     res_point[1] += cfg.FIELD_HEIGHT / 2
@@ -96,6 +97,11 @@ def rotate_z():
     rotate_trans_matrix(rotate_matrix)
     solve()
 
+
+def set_sf():
+    global sf
+    sf = float(scale_entry.get())
+    solve()
 
 def set_meta():
     global x_from, x_step, x_to, z_from, z_step, z_to
@@ -143,7 +149,7 @@ def draw_horizon_part(p1, p2, hh, lh):
 
     x, y = p1[0], p1[1]
 
-    while x <= round(p2[0]):
+    for _ in range(int(l) + 1):
         if not draw_point(int(round(x)), y, hh, lh):
             return
         x += dx
@@ -229,6 +235,8 @@ step_label = tk.Label(data_frame, text="Шаг", font=("Consolas", 14), bg=cfg.M
                       fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 func_label = tk.Label(data_frame, text="Функция", font=("Consolas", 14), bg=cfg.MAIN_COLOUR,
                       fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
+scale_label = tk.Label(data_frame, text="Коэффициент\nмасштабирования",
+                       font=("Consolas", 11), bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, relief=tk.GROOVE)
 
 
 x_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
@@ -237,6 +245,11 @@ y_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                    fg=cfg.MAIN_COLOUR, justify="center")
 z_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                    fg=cfg.MAIN_COLOUR, justify="center")
+
+x_entry.insert(0, "20")
+y_entry.insert(0, "20")
+z_entry.insert(0, "20")
+
 xfrom_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                       fg=cfg.MAIN_COLOUR, justify="center")
 xto_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
@@ -244,9 +257,9 @@ xto_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
 xstep_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                       fg=cfg.MAIN_COLOUR, justify="center")
 
-xfrom_entry.insert(0, "-10")
-xto_entry.insert(0, "10")
-xstep_entry.insert(0, "0.1")
+xfrom_entry.insert(0, str(x_from))
+xto_entry.insert(0, str(x_to))
+xstep_entry.insert(0, str(x_step))
 
 zfrom_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                       fg=cfg.MAIN_COLOUR, justify="center")
@@ -255,9 +268,13 @@ zto_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
 zstep_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
                       fg=cfg.MAIN_COLOUR, justify="center")
 
-zfrom_entry.insert(0, "-10")
-zto_entry.insert(0, "10")
-zstep_entry.insert(0, "0.1")
+zfrom_entry.insert(0, str(z_from))
+zto_entry.insert(0, str(z_to))
+zstep_entry.insert(0, str(z_step))
+
+scale_entry = tk.Entry(data_frame, bg=cfg.ADD_COLOUR, font=("Consolas", 13),
+                      fg=cfg.MAIN_COLOUR, justify="center")
+scale_entry.insert(0, str(sf))
 
 
 x_btn = tk.Button(data_frame, text="Вращать", font=("Consolas", 14),
@@ -272,6 +289,9 @@ z_btn = tk.Button(data_frame, text="Вращать", font=("Consolas", 14),
 confirm_btn = tk.Button(data_frame, text="Применить", font=("Consolas", 14),
                         bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=set_meta,
                         activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
+scale_button = tk.Button(data_frame, text="Изменить", font=("Consolas", 14),
+                         bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=set_sf,
+                         activebackground=cfg.ADD_COLOUR, activeforeground=cfg.MAIN_COLOUR)
 
 res_btn = tk.Button(data_frame, text="Нарисовать", font=("Consolas", 14),
                     bg=cfg.MAIN_COLOUR, fg=cfg.ADD_COLOUR, command=solve,
@@ -333,6 +353,12 @@ offset += 1
 confirm_btn.place(x=0, y=cfg.SLOT_HEIGHT * offset,
                   width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
 offset += 2
+
+scale_label.place(x=0, y=cfg.SLOT_HEIGHT * offset, width=cfg.DATA_WIDTH // 3, height=cfg.SLOT_HEIGHT)
+scale_entry.place(x=cfg.DATA_WIDTH // 3, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH // 3, height=cfg.SLOT_HEIGHT)
+scale_button.place(x=2 * cfg.DATA_WIDTH // 3, y=cfg.SLOT_HEIGHT * offset,
+                 width=cfg.DATA_WIDTH // 3, height=cfg.SLOT_HEIGHT)
 
 rotate_label.place(x=0, y=cfg.SLOT_HEIGHT * offset,
                    width=cfg.DATA_WIDTH, height=cfg.SLOT_HEIGHT)
