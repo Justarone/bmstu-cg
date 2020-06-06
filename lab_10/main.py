@@ -51,14 +51,16 @@ def rotate_trans_matrix(rotate_matrix):
 
 
 def trans_point(point):
-    point.append(1)
+    # point = (x, y, z)
+    point.append(1) # (x, y, z, 1)
     res_point = [0, 0, 0, 0]
     for i in range(4):
         for j in range(4):
             res_point[i] += point[j] * trans_matrix[j][i]
 
     for i in range(3):
-        res_point[i] *= cfg.SF
+        res_point[i] *= cfg.SF # x, y, z ==> SF * x, SF * y, SF * z
+
     res_point[0] += cfg.FIELD_WIDTH / 2
     res_point[1] += cfg.FIELD_HEIGHT / 2
 
@@ -115,7 +117,6 @@ def is_visible(point):
 
 
 def draw_point(x, y, hh, lh):
-    x = int(round(x))
     if not is_visible([x, y]):
         return False
 
@@ -131,26 +132,31 @@ def draw_point(x, y, hh, lh):
 
 
 def draw_horizon_part(p1, p2, hh, lh):
-    if p1[0] > p2[0]:
+    if p1[0] > p2[0]: # хочу, чтобы x2 > x1
         p1, p2 = p2, p1
 
-    x, y = round(p1[0]), p1[1]
-    dx = 1
-    dy = (p2[1] - p1[1]) / (p2[0] - p1[0])
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    l = dx if dx > dy else dy
+    dx /= l
+    dy /= l
+
+    x, y = p1[0], p1[1]
 
     while x <= round(p2[0]):
-        if not draw_point(x, y, hh, lh):
+        if not draw_point(int(round(x)), y, hh, lh):
             return
         x += dx
         y += dy
 
 
 def draw_horizon(func, hh, lh, fr, to, step, z):
-    f = lambda x: func(x, z)
+    f = lambda x: func(x, z) # f = f(x, z=const)
     prev = None
     for x in arange(fr, to + step, step):
-        current = trans_point([x, f(x), z])
-        if prev:
+        # x, z, f(x, z=const)
+        current = trans_point([x, f(x), z]) # transformed: Повернуть, масштабировать и сдвинуть в центр экрана
+        if prev: # Если это не первая точка (то есть если есть предыдущая)
             draw_horizon_part(prev, current, hh, lh)
         prev = current
 
