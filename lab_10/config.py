@@ -27,3 +27,6 @@ FIELD_HEIGHT = int(FIELD_PART_HEIGHT * WINDOW_HEIGHT)
 CANVAS_CENTER = (FIELD_WIDTH // 2, FIELD_HEIGHT // 2)
 
 FIELD_BORDER_PART = 0.03
+
+FUNCS = ["sin(x) * cos(z)", "sin(cos(x)) * sin(z)", "cos(x) * z / 3"]
+SF = 48
